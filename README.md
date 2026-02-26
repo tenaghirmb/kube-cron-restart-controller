@@ -1,6 +1,12 @@
 # cron-restart
 
-The Kubernetes Restart Operator is designed to periodically restart common Kubernetes resources using the `kubectl rollout restart` command. This operator supports Deployments, StatefulSets, DaemonSets, and other resources that can be restarted using this command.
+A high-performance Kubernetes Operator built with **Kubebuilder** for scheduled workload lifecycle management.
+
+This operator supports Deployments, StatefulSets, DaemonSets, and other resources that can be restarted using the `kubectl rollout restart` command.
+
+## Overview
+
+cron-restart provides a declarative way to manage service recycling and scheduled maintenance windows in Kubernetes. Unlike simple CronJobs, it manages existing workloads directly via a custom **Reconciliation Loop** and a thread-safe **CronManager**.
 
 ## Features
 
@@ -8,6 +14,12 @@ The Kubernetes Restart Operator is designed to periodically restart common Kuber
 - **Resource Support**: Works with any resource that supports `kubectl rollout restart`.
 - **Custom Schedules**: Define custom restart schedules using Cron syntax.
 - **Flexible Time Configuration**: Supports skipping specified dates and run once.
+
+## Tech Stack
+* **Language**: Golang
+* **Framework**: Kubebuilder
+* **Library**: ringtail/go-cron
+* **API**: Kubernetes Custom Resource Definitions (CRDs)
 
 ## Prerequisites
 
