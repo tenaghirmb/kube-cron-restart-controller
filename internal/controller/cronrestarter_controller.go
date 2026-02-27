@@ -19,6 +19,9 @@ package controller
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
+
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -27,9 +30,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"strings"
-	"time"
 
 	cronrestartv1 "uni.com/cronrestart/api/v1"
 )
@@ -68,7 +70,8 @@ var _ reconcile.Reconciler = &CronRestarterReconciler{}
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.19.0/pkg/reconcile
 func (r *CronRestarterReconciler) Reconcile(ctx context.Context, request ctrl.Request) (ctrl.Result, error) {
-
+	// Refactored from Aggregate Model to SRRM for distributed safety.
+	
 	// Fetch the CronRestarter instance
 	log.Infof("Start to handle cronRestarter %s in %s namespace", request.Name, request.Namespace)
 	instance := &cronrestartv1.CronRestarter{}
@@ -245,5 +248,6 @@ func checkGlobalParamsChanges(status cronrestartv1.CronRestarterStatus, spec cro
 func (r *CronRestarterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&cronrestartv1.CronRestarter{}).
+		WithEventFilter(predicate.GenerationChangedPredicate{}). // ignore resourceVersion/Status update
 		Complete(r)
 }
