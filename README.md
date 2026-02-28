@@ -28,7 +28,7 @@ This operator supports Deployments, StatefulSets, DaemonSets, and other resource
          * [Intervals](#intervals)
          * [Specific Date (@date)](#specific-date-date)
    * [Contributing](#contributing)
-   * [License](#license)
+   * [Licensing](#licensing)
 <!--te-->
 
 ## Overview
