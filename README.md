@@ -1,82 +1,81 @@
-# kube-cron-restart-controller
+<!-- markdownlint-disable-next-line MD033 -->
+<h1 align="center">kube-cron-restart-controller</h1>
 
+<!-- markdownlint-disable-next-line MD033 -->
 <a href='https://github.com/tenaghirmb' target="_blank"><img alt='FAFO' src='https://img.shields.io/badge/FAFO-100000?style=flat&logo=FAFO&logoColor=white&labelColor=41DD46&color=black'/></a>
 [![TOC Automation](https://github.com/tenaghirmb/kube-cron-restart-controller/actions/workflows/main.yml/badge.svg?branch=main&event=push)](https://github.com/tenaghirmb/kube-cron-restart-controller/actions/workflows/main.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](https://opensource.org)
 
-
-
-A high-performance Kubernetes Operator built with **Kubebuilder** for scheduled workload lifecycle management.
-
-This operator supports Deployments, StatefulSets, DaemonSets, and other resources that can be restarted using the `kubectl rollout restart` command.
+**Advanced Cron Restart Controller** is an industrial-grade Kubernetes Operator designed to orchestrate scheduled workload maintenance at scale. Built with **Go** and **Kubebuilder**, it replaces the resource-heavy native CronJob pattern with a high-concurrency **In-Memory Scheduling Engine** coupled with **Atomic Status-Gatekeeping** to ensure 100% execution integrity in distributed environments.
 
 # Table of Contents
 <!--ts-->
-   * [Overview](#overview)
-   * [Features](#features)
-   * [Tech Stack](#tech-stack)
-   * [Prerequisites](#prerequisites)
-   * [Installation](#installation)
-      * [Using Helm](#using-helm)
-   * [Usage](#usage)
-   * [Configuration](#configuration)
-      * [restartTargetRef](#restarttargetref)
-      * [excludeDates](#excludedates)
-      * [jobs](#jobs)
-      * [cron expression](#cron-expression)
-         * [Special Characters](#special-characters)
-         * [Predefined Schedules](#predefined-schedules)
-         * [Intervals](#intervals)
-         * [Specific Date (@date)](#specific-date-date)
-   * [Contributing](#contributing)
-   * [Licensing](#licensing)
+* [Overview](#overview)
+* [Features](#features)
+* [Tech Stack](#tech-stack)
+* [Prerequisites](#prerequisites)
+* [Installation](#installation)
+  * [Using Helm](#using-helm)
+* [Usage](#usage)
+* [Configuration](#configuration)
+  * [restartTargetRef](#restarttargetref)
+  * [excludeDates](#excludedates)
+  * [jobs](#jobs)
+  * [cron expression](#cron-expression)
+    * [Special Characters](#special-characters)
+    * [Predefined Schedules](#predefined-schedules)
+    * [Intervals](#intervals)
+    * [Specific Date (@date)](#specific-date-date)
+* [Contributing](#contributing)
+* [Licensing](#licensing)
 <!--te-->
 
 ## Overview
 
-cron-restart provides a declarative way to manage service recycling and scheduled maintenance windows in Kubernetes. Unlike simple CronJobs, it manages existing workloads directly via a custom **Reconciliation Loop** and a thread-safe **CronManager**.
+This operator supports Deployments, StatefulSets, DaemonSets, and other resources that can be restarted using the `kubectl rollout restart` command.
 
 ## Features
 
-- **Scheduled Restarts**: Automatically restart resources on a predefined schedule.
-- **Resource Support**: Works with any resource that supports `kubectl rollout restart`.
-- **Custom Schedules**: Define custom restart schedules using Cron syntax.
-- **Flexible Time Configuration**: Supports skipping specified dates and run once.
+* **Scheduled Restarts**: Automatically restart resources on a predefined schedule.
+* **Resource Support**: Works with any resource that supports `kubectl rollout restart`.
+* **Custom Schedules**: Define custom restart schedules using Cron syntax.
+* **Flexible Time Configuration**: Supports skipping specified dates and run once.
 
 ## Tech Stack
-| Component	| Technology	| Purpose |
-| :-- | :-- | :-- |
-| Language	| Golang 1.22+	| Core runtime environment |
-| Framework |	Kubebuilder v4	| Operator scaffolding and boilerplate generation |
-| Controller Runtime |	controller-runtime |	Reconciliation pattern implementation |
-| Cron Library |	ringtail/go-cron |	Enhanced cron expression parsing and scheduling |
-| Kubernetes API	| client-go	| Kubernetes resource manipulation |
-| Dependency Management |	Go Modules	| Package version management |
-| Build System	| Make |	Compilation and artifact generation |
-| Container Runtime |	Docker	| Operator containerization |
-| Package Manager |	Helm 3+	| Cluster installation and upgrades |
 
+| Component | Technology | Purpose |
+| :-- | :-- | :-- |
+| Language | Golang 1.22+ | Core runtime environment |
+| Framework | Kubebuilder v4 | Operator scaffolding and boilerplate generation |
+| Controller Runtime | controller-runtime | Reconciliation pattern implementation |
+| Cron Library | ringtail/go-cron | Enhanced cron expression parsing and scheduling |
+| Kubernetes API | client-go | Kubernetes resource manipulation |
+| Dependency Management | Go Modules | Package version management |
+| Build System | Make | Compilation and artifact generation |
+| Container Runtime | Docker | Operator containerization |
+| Package Manager | Helm 3+ | Cluster installation and upgrades |
 
 ## Prerequisites
 
-| Tool |	Minimum Version	| Purpose|
+| Tool | Minimum Version | Purpose |
 | :-- | :-- | :-- |
-| kubectl	| v1.11.3+ |	Interacting with your Kubernetes cluster |
-|Docker |	17.03+	| Building container images (if deploying from source) |
-| Go	| v1.22.0+	| Building from source |
-| Helm	| v3.x	| Installing via Helm chart |
-
+| kubectl | v1.11.3+ | Interacting with your Kubernetes cluster |
+| Docker | 17.03+ | Building container images (if deploying from source) |
+| Go | v1.22.0+ | Building from source |
+| Helm | v3.x | Installing via Helm chart |
 
 ## Installation
 
 ### Using Helm
 
 1. **Package the Helm Chart**:
+
    ```bash
    helm package cron-restart
    ```
 
 2. **Install the operator**:
+
    ```bash
    helm install cronrestart cron-restart-0.1.0.tgz -n kube-system
    ```
@@ -86,11 +85,13 @@ cron-restart provides a declarative way to manage service recycling and schedule
 Try out the examples in the examples folder.
 
 1. Deploy resources in deployment_cronrestart.yaml
+
    ```bash
    kubectl apply -f deployment_cronrestart.yaml
    ```
 
 2. Check the status of the deployment
+
    ```bash
    ➜  examples kubectl get deploy nginx-deployment-basic
    NAME                     READY   UP-TO-DATE   AVAILABLE   AGE
@@ -98,6 +99,7 @@ Try out the examples in the examples folder.
    ```
 
 3. Check the restart event
+
    ```bash
    ➜  examples kubectl describe deploy nginx-deployment-basic
    Name:                   nginx-deployment-basic
@@ -141,23 +143,25 @@ Try out the examples in the examples folder.
    ```
 
 4. Check controller's log
+
    ```bash
    ➜  examples kubectl logs -n kube-system kubernetes-cronrestarter-controller-86689855c9-mjplw
-   2025-03-03T11:08:43+08:00	INFO	setup	starting manager
-   2025-03-03T11:08:43+08:00	INFO	starting server	{"name": "health probe", "addr": "[::]:8081"}
-   2025-03-03T11:08:43+08:00	INFO	Starting EventSource	{"controller": "cronrestarter", "controllerGroup": "autorestart.uni.com", "controllerKind": "CronRestarter", "source": "kind source: *v1.CronRestarter"}
-   2025-03-03T11:08:43+08:00	INFO	Starting Controller	{"controller": "cronrestarter", "controllerGroup": "autorestart.uni.com", "controllerKind": "CronRestarter"}
-   2025-03-03T11:08:43+08:00	INFO	Starting workers	{"controller": "cronrestarter", "controllerGroup": "autorestart.uni.com", "controllerKind": "CronRestarter", "worker count": 1}
+   2025-03-03T11:08:43+08:00 INFO setup starting manager
+   2025-03-03T11:08:43+08:00 INFO starting server {"name": "health probe", "addr": "[::]:8081"}
+   2025-03-03T11:08:43+08:00 INFO Starting EventSource {"controller": "cronrestarter", "controllerGroup": "autorestart.uni.com", "controllerKind": "CronRestarter", "source": "kind source: *v1.CronRestarter"}
+   2025-03-03T11:08:43+08:00 INFO Starting Controller {"controller": "cronrestarter", "controllerGroup": "autorestart.uni.com", "controllerKind": "CronRestarter"}
+   2025-03-03T11:08:43+08:00 INFO Starting workers {"controller": "cronrestarter", "controllerGroup": "autorestart.uni.com", "controllerKind": "CronRestarter", "worker count": 1}
    I0303 11:18:43.776888       1 cronmanager.go:98] GC loop started every 10m0s
    I0303 11:22:31.342943       1 cronrestarter_controller.go:73] Start to handle cronRestarter cronrestart-sample in default namespace
    I0303 11:22:31.345413       1 cronmanager.go:48] cronRestarter job restart of cronRestarter cronrestart-sample in default created, 1 active jobs exist
    I0303 11:22:31.354147       1 cronrestarter_controller.go:73] Start to handle cronRestarter cronrestart-sample in default namespace
    I0303 11:28:43.762628       1 cronmanager.go:98] GC loop started every 10m0s
    I0303 11:30:00.047956       1 cronrestarter_controller.go:73] Start to handle cronRestarter cronrestart-sample in default namespace
-   2025-03-03T11:30:00+08:00	DEBUG	events	cron restarter job restart executed successfully. Deployment nginx-deployment-basic in namespace default has been restarted successfully. job: restart id: 451ff9ef-31e7-4e90-b605-03c5d7d5c511	{"type": "Normal", "object": {"kind":"CronRestarter","namespace":"default","name":"cronrestart-sample","uid":"ee4e061c-f9f7-4631-8178-d1e8b8859fd0","apiVersion":"autorestart.uni.com/v1","resourceVersion":"16572"}, "reason": "Succeed"}
+   2025-03-03T11:30:00+08:00 DEBUG events cron restarter job restart executed successfully. Deployment nginx-deployment-basic in namespace default has been restarted successfully. job: restart id: 451ff9ef-31e7-4e90-b605-03c5d7d5c511 {"type": "Normal", "object": {"kind":"CronRestarter","namespace":"default","name":"cronrestart-sample","uid":"ee4e061c-f9f7-4631-8178-d1e8b8859fd0","apiVersion":"autorestart.uni.com/v1","resourceVersion":"16572"}, "reason": "Succeed"}
    ```
 
 5. Describe the cronrestarter
+
    ```bash
    ➜  examples kubectl describe cronrestarters cronrestart-sample
    Name:         cronrestart-sample
@@ -203,6 +207,7 @@ The `State` of the cronrestart job indicates its execution status. When the `Sta
 ## Configuration
 
 The following example demonstrates how to configure a `CronRestarter`.
+
 ```bash
 apiVersion: autorestart.uni.com/v1
 kind: CronRestarter
@@ -225,7 +230,7 @@ spec:
     - name: "special-restart"
       runOnce: true
       schedule: "@date 2025-4-1 11:11:11"
-``` 
+```
 
 ### restartTargetRef
 
@@ -234,6 +239,7 @@ The `restartTargetRef` field specifies the workload to restart. If the workload 
 ### excludeDates
 
 The `excludeDates` field is an array of dates. The job will skip execution when the date matches. The minimum unit is a day. If you want to skip a specific date (e.g., November 10th), you can specify the excludeDates field as follows:
+
   ```bash
     excludeDates:
     - "* * * 10 11 *"
@@ -242,6 +248,7 @@ The `excludeDates` field is an array of dates. The job will skip execution when 
 ### jobs
 
 The `Job` spec for cronrestart requires three fields:
+
 * name
   `name` should be unique within a single cronrestart spec. You can distinguish different job execution statuses by their job names.
 * runOnce
@@ -264,20 +271,20 @@ Day of week  | Yes        | 0-6 or SUN-SAT  | * / , - ?
 
 #### Special Characters
 
-- **Asterisk ( * )**
-  - The asterisk indicates that the cron expression will match for all values of the field. For example, using an asterisk in the 5th field (month) means every month.
+* **Asterisk ( * )**
+  * The asterisk indicates that the cron expression will match for all values of the field. For example, using an asterisk in the 5th field (month) means every month.
 
-- **Slash ( / )**
-  - Slashes are used to describe increments of ranges. For example, `3-59/15` in the 1st field (minutes) means the 3rd minute of the hour and every 15 minutes thereafter. The form `*/...` is equivalent to the form `first-last/...`, which means an increment over the largest possible range of the field. The form `N/...` means starting at N and using the increment until the end of that specific range. It does not wrap around.
+* **Slash ( / )**
+  * Slashes are used to describe increments of ranges. For example, `3-59/15` in the 1st field (minutes) means the 3rd minute of the hour and every 15 minutes thereafter. The form `*/...` is equivalent to the form `first-last/...`, which means an increment over the largest possible range of the field. The form `N/...` means starting at N and using the increment until the end of that specific range. It does not wrap around.
 
-- **Comma ( , )**
-  - Commas are used to separate items of a list. For example, using `MON,WED,FRI` in the 5th field (day of week) means Mondays, Wednesdays, and Fridays.
+* **Comma ( , )**
+  * Commas are used to separate items of a list. For example, using `MON,WED,FRI` in the 5th field (day of week) means Mondays, Wednesdays, and Fridays.
 
-- **Hyphen ( - )**
-  - Hyphens are used to define ranges. For example, `9-17` means every hour between 9am and 5pm inclusive.
+* **Hyphen ( - )**
+  * Hyphens are used to define ranges. For example, `9-17` means every hour between 9am and 5pm inclusive.
 
-- **Question mark ( ? )**
-  - A question mark can be used instead of `*` to leave either day-of-month or day-of-week blank.
+* **Question mark ( ? )**
+  * A question mark can be used instead of `*` to leave either day-of-month or day-of-week blank.
 
 #### Predefined Schedules
 
@@ -297,7 +304,7 @@ You can also schedule a job to execute at fixed intervals, starting at the time 
 
 @every `<duration>`
 
-where `<duration>` is a string accepted by `time.ParseDuration` (https://golang.org/pkg/time/#ParseDuration).
+where `<duration>` is a string accepted by `time.ParseDuration` (<https://golang.org/pkg/time/#ParseDuration>).
 
 For example, `@every 1h30m10s` indicates a schedule that activates after 1 hour, 30 minutes, and 10 seconds, and then every interval after that.
 
@@ -312,7 +319,7 @@ You can use a specific date to schedule a job for restarting workloads. This is 
 Entry                       | Description                                | Equivalent To
 -----                       | -----------                                | -------------
 @date 2025-4-1 21:54:00     | Run once when the date is reached          | `0 54 21 1 4 *`
-                              
+
 ## Contributing
 
 Contributions are welcome! Please submit an issue or pull request to contribute to this project.
@@ -320,4 +327,3 @@ Contributions are welcome! Please submit an issue or pull request to contribute 
 ## Licensing
 
 This project is licensed under the terms of the MIT License. See the [LICENSE](LICENSE) file for the full license text and copyright notice.
-
