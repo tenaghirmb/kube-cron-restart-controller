@@ -1,3 +1,4 @@
+name: TOC Automation
 on:
   push:
     branches: [main]
@@ -8,6 +9,7 @@ on:
 
 jobs:
   build:
+    name: generate TOC
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
