@@ -1,4 +1,26 @@
 <!--ts-->
+* [cron-restart](#cron-restart)
+   * [Overview](#overview)
+   * [Features](#features)
+   * [Tech Stack](#tech-stack)
+   * [Prerequisites](#prerequisites)
+   * [Installation](#installation)
+      * [Using Helm](#using-helm)
+   * [Usage](#usage)
+   * [Configuration](#configuration)
+      * [restartTargetRef](#restarttargetref)
+      * [excludeDates](#excludedates)
+      * [jobs](#jobs)
+      * [cron expression](#cron-expression)
+         * [Special Characters](#special-characters)
+         * [Predefined Schedules](#predefined-schedules)
+         * [Intervals](#intervals)
+         * [Specific Date (@date)](#specific-date-date)
+   * [Contributing](#contributing)
+   * [License](#license)
+
+<!-- Created by https://github.com/ekalinin/github-markdown-toc -->
+<!-- Added by: runner, at: Sat Feb 28 01:02:12 UTC 2026 -->
 
 <!--te-->
 
