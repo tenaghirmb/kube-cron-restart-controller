@@ -2,6 +2,8 @@
 
 <a href='https://github.com/tenaghirmb' target="_blank"><img alt='FAFO' src='https://img.shields.io/badge/FAFO-100000?style=flat&logo=FAFO&logoColor=white&labelColor=41DD46&color=black'/></a>
 [![TOC Automation](https://github.com/tenaghirmb/kube-cron-restart-controller/actions/workflows/main.yml/badge.svg?branch=main&event=push)](https://github.com/tenaghirmb/kube-cron-restart-controller/actions/workflows/main.yml)
+[![License: MIT](https://img.shields.io)](https://opensource.org)
+
 
 A high-performance Kubernetes Operator built with **Kubebuilder** for scheduled workload lifecycle management.
 
@@ -314,6 +316,7 @@ Entry                       | Description                                | Equiv
 
 Contributions are welcome! Please submit an issue or pull request to contribute to this project.
 
-## License
+## Licensing
 
-This project is licensed under the Apache License 2.0. See the LICENSE file for details.
+This project is licensed under the terms of the MIT License. See the [LICENSE](LICENSE) file for the full license text and copyright notice.
+
