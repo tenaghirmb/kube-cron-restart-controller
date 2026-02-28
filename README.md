@@ -1,5 +1,7 @@
 # kube-cron-restart-controller
 
+<a href='https://github.com/tenaghirmb' target="_blank"><img alt='FAFO' src='https://img.shields.io/badge/FAFO-100000?style=plastic&logo=FAFO&logoColor=white&labelColor=41DD46&color=black'/></a>
+
 A high-performance Kubernetes Operator built with **Kubebuilder** for scheduled workload lifecycle management.
 
 This operator supports Deployments, StatefulSets, DaemonSets, and other resources that can be restarted using the `kubectl rollout restart` command.
