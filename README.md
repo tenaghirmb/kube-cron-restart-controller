@@ -28,7 +28,7 @@ This operator supports Deployments, StatefulSets, DaemonSets, and other resource
    * [License](#license)
 
 <!-- Created by https://github.com/ekalinin/github-markdown-toc -->
-<!-- Added by: runner, at: Sat Feb 28 01:21:55 UTC 2026 -->
+<!-- Added by: runner, at: Sat Feb 28 01:22:29 UTC 2026 -->
 
 <!--te-->
 
