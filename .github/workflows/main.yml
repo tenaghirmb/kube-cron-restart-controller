@@ -15,7 +15,7 @@ jobs:
       - run: |
           curl https://raw.githubusercontent.com/ekalinin/github-markdown-toc/master/gh-md-toc -o gh-md-toc
           chmod a+x gh-md-toc
-          ./gh-md-toc --insert --no-backup --start-depth=1 README.md
+          ./gh-md-toc --insert --start-depth=2 --no-backup README.md
           rm -f ./gh-md-toc
       - uses: stefanzweifel/git-auto-commit-action@v7
         with:
