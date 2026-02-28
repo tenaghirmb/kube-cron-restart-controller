@@ -9,7 +9,8 @@ Table of contents
 =================
 
 <!--ts-->
-* [ kube-cron-restart-controller](#-kube-cron-restart-controller)
+* [kube-cron-restart-controller](#kube-cron-restart-controller)
+* [Table of contents](#table-of-contents)
    * [Overview](#overview)
    * [Features](#features)
    * [Tech Stack](#tech-stack)
@@ -30,7 +31,7 @@ Table of contents
    * [License](#license)
 
 <!-- Created by https://github.com/ekalinin/github-markdown-toc -->
-<!-- Added by: runner, at: Sat Feb 28 01:23:28 UTC 2026 -->
+<!-- Added by: runner, at: Sat Feb 28 01:27:10 UTC 2026 -->
 
 <!--te-->
 
