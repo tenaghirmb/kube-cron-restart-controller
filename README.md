@@ -61,11 +61,13 @@ cron-restart provides a declarative way to manage service recycling and schedule
 
 ## Prerequisites
 
-- go version v1.22.0+
-- docker version 17.03+.
-- kubectl version v1.11.3+.
-- Access to a Kubernetes v1.11.3+ cluster.
-- Helm 3 (for installation via Helm).
+| Tool |	Minimum Version	| Purpose|
+| --- | --- | --- |
+| kubectl	| v1.11.3+ |	Interacting with your Kubernetes cluster |
+|Docker |	17.03+	| Building container images (if deploying from source) |
+| Go	| v1.22.0+	| Building from source
+Helm	v3.x	Installing via Helm chart |
+
 
 ## Installation
 
