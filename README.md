@@ -46,10 +46,18 @@ cron-restart provides a declarative way to manage service recycling and schedule
 - **Flexible Time Configuration**: Supports skipping specified dates and run once.
 
 ## Tech Stack
-* **Language**: Golang
-* **Framework**: Kubebuilder
-* **Library**: ringtail/go-cron
-* **API**: Kubernetes Custom Resource Definitions (CRDs)
+| Component	| Technology	| Purpose |
+| --- | --- | --- |
+| Language	| Golang 1.22+	| Core runtime environment |
+| Framework |	Kubebuilder v4	| Operator scaffolding and boilerplate generation |
+| Controller Runtime |	controller-runtime |	Reconciliation pattern implementation |
+| Cron Library |	ringtail/go-cron |	Enhanced cron expression parsing and scheduling |
+| Kubernetes API	| client-go	| Kubernetes resource manipulation |
+| Dependency Management |	Go Modules	| Package version management |
+| Build System	| Make |	Compilation and artifact generation |
+| Container Runtime |	Docker	| Operator containerization |
+| Package Manager |	Helm 3+	| Cluster installation and upgrades |
+
 
 ## Prerequisites
 
