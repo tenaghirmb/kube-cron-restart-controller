@@ -5,7 +5,7 @@ A high-performance Kubernetes Operator built with **Kubebuilder** for scheduled 
 This operator supports Deployments, StatefulSets, DaemonSets, and other resources that can be restarted using the `kubectl rollout restart` command.
 
 <!--ts-->
-* [cron-restart](#cron-restart)
+* [kube-cron-restart-controller](#kube-cron-restart-controller)
    * [Overview](#overview)
    * [Features](#features)
    * [Tech Stack](#tech-stack)
@@ -26,7 +26,7 @@ This operator supports Deployments, StatefulSets, DaemonSets, and other resource
    * [License](#license)
 
 <!-- Created by https://github.com/ekalinin/github-markdown-toc -->
-<!-- Added by: runner, at: Sat Feb 28 01:02:12 UTC 2026 -->
+<!-- Added by: runner, at: Sat Feb 28 01:04:52 UTC 2026 -->
 
 <!--te-->
 
