@@ -1,4 +1,5 @@
 name: TOC Automation
+run-name: ${{ github.actor }} is generating TOC 🚀
 on:
   push:
     branches: [main]
