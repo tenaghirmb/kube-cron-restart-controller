@@ -6,7 +6,7 @@ This operator supports Deployments, StatefulSets, DaemonSets, and other resource
 
 ### Contents
 <!--ts-->
-* [kube-cron-restart-controller](#kube-cron-restart-controller)
+      * [Contents](#contents)
    * [Overview](#overview)
    * [Features](#features)
    * [Tech Stack](#tech-stack)
@@ -27,7 +27,7 @@ This operator supports Deployments, StatefulSets, DaemonSets, and other resource
    * [License](#license)
 
 <!-- Created by https://github.com/ekalinin/github-markdown-toc -->
-<!-- Added by: runner, at: Sat Feb 28 01:04:52 UTC 2026 -->
+<!-- Added by: runner, at: Sat Feb 28 01:09:56 UTC 2026 -->
 
 <!--te-->
 
