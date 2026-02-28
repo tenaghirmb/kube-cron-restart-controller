@@ -1,3 +1,7 @@
+<!--ts-->
+
+<!--te-->
+
 # cron-restart
 
 A high-performance Kubernetes Operator built with **Kubebuilder** for scheduled workload lifecycle management.
