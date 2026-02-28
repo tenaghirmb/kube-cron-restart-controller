@@ -1,6 +1,7 @@
 # kube-cron-restart-controller
 
 <a href='https://github.com/tenaghirmb' target="_blank"><img alt='FAFO' src='https://img.shields.io/badge/FAFO-100000?style=plastic&logo=FAFO&logoColor=white&labelColor=41DD46&color=black'/></a>
+[![.github/workflows/main.yml](https://github.com/tenaghirmb/kube-cron-restart-controller/actions/workflows/main.yml/badge.svg?branch=main&event=push)](https://github.com/tenaghirmb/kube-cron-restart-controller/actions/workflows/main.yml)
 
 A high-performance Kubernetes Operator built with **Kubebuilder** for scheduled workload lifecycle management.
 
