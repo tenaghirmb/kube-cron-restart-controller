@@ -6,7 +6,7 @@ A high-performance Kubernetes Operator built with **Kubebuilder** for scheduled 
 
 This operator supports Deployments, StatefulSets, DaemonSets, and other resources that can be restarted using the `kubectl rollout restart` command.
 
-
+# Table of Contents
 <!--ts-->
    * [Overview](#overview)
    * [Features](#features)
@@ -41,7 +41,7 @@ cron-restart provides a declarative way to manage service recycling and schedule
 
 ## Tech Stack
 | Component	| Technology	| Purpose |
-| --- | --- | --- |
+| :-- | :-- | :-- |
 | Language	| Golang 1.22+	| Core runtime environment |
 | Framework |	Kubebuilder v4	| Operator scaffolding and boilerplate generation |
 | Controller Runtime |	controller-runtime |	Reconciliation pattern implementation |
@@ -56,11 +56,11 @@ cron-restart provides a declarative way to manage service recycling and schedule
 ## Prerequisites
 
 | Tool |	Minimum Version	| Purpose|
-| --- | --- | --- |
+| :-- | :-- | :-- |
 | kubectl	| v1.11.3+ |	Interacting with your Kubernetes cluster |
 |Docker |	17.03+	| Building container images (if deploying from source) |
-| Go	| v1.22.0+	| Building from source
-Helm	v3.x	Installing via Helm chart |
+| Go	| v1.22.0+	| Building from source |
+| Helm	| v3.x	| Installing via Helm chart |
 
 
 ## Installation
