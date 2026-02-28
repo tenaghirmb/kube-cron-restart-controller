@@ -1,3 +1,9 @@
+# kube-cron-restart-controller
+
+A high-performance Kubernetes Operator built with **Kubebuilder** for scheduled workload lifecycle management.
+
+This operator supports Deployments, StatefulSets, DaemonSets, and other resources that can be restarted using the `kubectl rollout restart` command.
+
 <!--ts-->
 * [cron-restart](#cron-restart)
    * [Overview](#overview)
@@ -23,12 +29,6 @@
 <!-- Added by: runner, at: Sat Feb 28 01:02:12 UTC 2026 -->
 
 <!--te-->
-
-# cron-restart
-
-A high-performance Kubernetes Operator built with **Kubebuilder** for scheduled workload lifecycle management.
-
-This operator supports Deployments, StatefulSets, DaemonSets, and other resources that can be restarted using the `kubectl rollout restart` command.
 
 ## Overview
 
