@@ -1,8 +1,36 @@
-# cron-restart
+# kube-cron-restart-controller
+
+<a href='https://github.com/tenaghirmb' target="_blank"><img alt='FAFO' src='https://img.shields.io/badge/FAFO-100000?style=flat&logo=FAFO&logoColor=white&labelColor=41DD46&color=black'/></a>
+[![TOC Automation](https://github.com/tenaghirmb/kube-cron-restart-controller/actions/workflows/main.yml/badge.svg?branch=main&event=push)](https://github.com/tenaghirmb/kube-cron-restart-controller/actions/workflows/main.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](https://opensource.org)
+
+
 
 A high-performance Kubernetes Operator built with **Kubebuilder** for scheduled workload lifecycle management.
 
 This operator supports Deployments, StatefulSets, DaemonSets, and other resources that can be restarted using the `kubectl rollout restart` command.
+
+# Table of Contents
+<!--ts-->
+   * [Overview](#overview)
+   * [Features](#features)
+   * [Tech Stack](#tech-stack)
+   * [Prerequisites](#prerequisites)
+   * [Installation](#installation)
+      * [Using Helm](#using-helm)
+   * [Usage](#usage)
+   * [Configuration](#configuration)
+      * [restartTargetRef](#restarttargetref)
+      * [excludeDates](#excludedates)
+      * [jobs](#jobs)
+      * [cron expression](#cron-expression)
+         * [Special Characters](#special-characters)
+         * [Predefined Schedules](#predefined-schedules)
+         * [Intervals](#intervals)
+         * [Specific Date (@date)](#specific-date-date)
+   * [Contributing](#contributing)
+   * [Licensing](#licensing)
+<!--te-->
 
 ## Overview
 
@@ -16,18 +44,28 @@ cron-restart provides a declarative way to manage service recycling and schedule
 - **Flexible Time Configuration**: Supports skipping specified dates and run once.
 
 ## Tech Stack
-* **Language**: Golang
-* **Framework**: Kubebuilder
-* **Library**: ringtail/go-cron
-* **API**: Kubernetes Custom Resource Definitions (CRDs)
+| Component	| Technology	| Purpose |
+| :-- | :-- | :-- |
+| Language	| Golang 1.22+	| Core runtime environment |
+| Framework |	Kubebuilder v4	| Operator scaffolding and boilerplate generation |
+| Controller Runtime |	controller-runtime |	Reconciliation pattern implementation |
+| Cron Library |	ringtail/go-cron |	Enhanced cron expression parsing and scheduling |
+| Kubernetes API	| client-go	| Kubernetes resource manipulation |
+| Dependency Management |	Go Modules	| Package version management |
+| Build System	| Make |	Compilation and artifact generation |
+| Container Runtime |	Docker	| Operator containerization |
+| Package Manager |	Helm 3+	| Cluster installation and upgrades |
+
 
 ## Prerequisites
 
-- go version v1.22.0+
-- docker version 17.03+.
-- kubectl version v1.11.3+.
-- Access to a Kubernetes v1.11.3+ cluster.
-- Helm 3 (for installation via Helm).
+| Tool |	Minimum Version	| Purpose|
+| :-- | :-- | :-- |
+| kubectl	| v1.11.3+ |	Interacting with your Kubernetes cluster |
+|Docker |	17.03+	| Building container images (if deploying from source) |
+| Go	| v1.22.0+	| Building from source |
+| Helm	| v3.x	| Installing via Helm chart |
+
 
 ## Installation
 
@@ -279,6 +317,7 @@ Entry                       | Description                                | Equiv
 
 Contributions are welcome! Please submit an issue or pull request to contribute to this project.
 
-## License
+## Licensing
 
-This project is licensed under the Apache License 2.0. See the LICENSE file for details.
+This project is licensed under the terms of the MIT License. See the [LICENSE](LICENSE) file for the full license text and copyright notice.
+
