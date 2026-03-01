@@ -1,8 +1,6 @@
 <!-- markdownlint-disable-next-line MD033 -->
 <h1>kube-cron-restart-controller</h1>
 
-<!-- markdownlint-disable-next-line MD033 -->
-<a href='https://github.com/tenaghirmb' target="_blank"><img alt='FAFO' src='https://img.shields.io/badge/FAFO-100000?style=flat&logo=FAFO&logoColor=white&labelColor=41DD46&color=black'/></a>
 [![TOC Automation](https://github.com/tenaghirmb/kube-cron-restart-controller/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/tenaghirmb/kube-cron-restart-controller/actions/workflows/main.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](https://opensource.org)
 [![BuyMeACoffee](https://raw.githubusercontent.com/pachadotdev/buymeacoffee-badges/main/bmc-donate-yellow.svg)](https://www.buymeacoffee.com/tenaghirmb)
