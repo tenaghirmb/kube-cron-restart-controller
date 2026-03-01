@@ -330,4 +330,4 @@ Contributions are welcome! Please submit an issue or pull request to contribute 
 This project is licensed under the terms of the MIT License. See the [LICENSE](LICENSE) file for the full license text and copyright notice.
 
 ## Buy me a coffee
-[![BuyMeACoffee](https://media0.giphy.com/media/v1.Y2lkPTZjMDliOTUyZmZhMnVrcXN1ZW9oN2Vjc2k0OGpkY2N5eW8xYmQ4c211ZW02MHVicyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/513lZvPf6khjIQFibF/giphy.gif)](https://www.buymeacoffee.com/tenaghirmb)
+[![BuyMeACoffee](https://iili.io/JoQ1MeS.md.png)](https://www.buymeacoffee.com/tenaghirmb)
