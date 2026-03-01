@@ -1,6 +1,7 @@
 name: TOC Automation
 run-name: ${{ github.actor }} is generating TOC 🚀
 on:
+  workflow_dispatch:
   push:
     branches: [main]
     paths: ['README.md']
