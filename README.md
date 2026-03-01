@@ -30,6 +30,7 @@
          * [Specific Date (@date)](#specific-date-date)
    * [Contributing](#contributing)
    * [Licensing](#licensing)
+   * [Buy me a coffee](#buy-me-a-coffee)
 <!--te-->
 
 ## Overview
