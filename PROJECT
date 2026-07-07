@@ -5,6 +5,10 @@
 domain: uni.com
 layout:
 - go.kubebuilder.io/v4
+plugins:
+  helm.kubebuilder.io/v2-alpha:
+    manifests: dist/install.yaml
+    output: dist
 projectName: cron-restart
 repo: uni.com/cronrestart
 resources:

@@ -1,0 +1,19 @@
+apiVersion: autorestart.uni.com/v1
+kind: CronRestarter
+metadata:
+  labels:
+    app.kubernetes.io/name: cron-restart
+    app.kubernetes.io/managed-by: kustomize
+  name: cronrestarter-sample
+spec:
+  timezone: Asia/Shanghai
+  restartTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nginx-deployment-basic
+  excludeDates:
+   # exclude June 4th
+   - "* * 4 6 *"
+   # exclude every Friday 
+   - "* * * * 5"
+  schedule: "*/10 22 * * *"

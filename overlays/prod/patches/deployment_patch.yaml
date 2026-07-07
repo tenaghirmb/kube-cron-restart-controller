@@ -1,0 +1,10 @@
+- op: replace
+  path: /spec/replicas
+  value: 3  # 生产环境副本多，保证高可用
+
+- op: replace
+  path: /spec/template/spec/containers/0/env
+  value:
+  - name: TZ
+    value: Asia/Shanghai
+  

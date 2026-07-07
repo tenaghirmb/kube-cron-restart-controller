@@ -143,6 +143,47 @@ deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in
 undeploy: kustomize ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
 	$(KUSTOMIZE) build config/default | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
 
+.PHONY: deploy-samples
+deploy-samples: manifests kustomize ## Deploy samples to the K8s cluster specified in ~/.kube/config.
+	$(KUSTOMIZE) build config/samples | $(KUBECTL) apply -f -
+
+.PHONY: undeploy-samples
+undeploy-samples: kustomize ## Undeploy samples from the K8s cluster specified in ~/.kube/config.
+	$(KUSTOMIZE) build config/samples | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
+
+OVERLAYS_TEST = overlays/test
+OVERLAYS_PROD = overlays/prod
+
+.PHONY: deploy-test deploy-prod undeploy-test undeploy-prod build-test build-prod
+
+##@ Deployment (Multi-Environment)
+
+.PHONY: build-test
+build-test: manifests kustomize ## Build Operator YAML using Kustomize in the test environment
+	mkdir -p dist
+	$(KUSTOMIZE) build $(OVERLAYS_TEST) > dist/install.yaml
+
+.PHONY: build-prod
+build-prod: manifests kustomize ## Build Operator YAML using Kustomize in the production environment
+	mkdir -p dist
+	$(KUSTOMIZE) build $(OVERLAYS_PROD) > dist/install.yaml
+
+.PHONY: deploy-test
+deploy-test: manifests kustomize ## Deploy Operator to the K8s cluster specified in ~/.kube/config (test environment)
+	$(KUSTOMIZE) build $(OVERLAYS_TEST) | $(KUBERNETES_MANAGEMENT_TOOL) apply -f -
+
+.PHONY: deploy-prod
+deploy-prod: manifests kustomize ## Deploy Operator to the K8s cluster specified in ~/.kube/config (production environment)
+	$(KUSTOMIZE) build $(OVERLAYS_PROD) | $(KUBERNETES_MANAGEMENT_TOOL) apply -f -
+
+.PHONY: undeploy-test
+undeploy-test: kustomize ## Undeploy Operator from the K8s cluster specified in ~/.kube/config (test environment). Call with ignore-not-found=true to ignore resource not found errors during deletion.
+	$(KUSTOMIZE) build $(OVERLAYS_TEST) | $(KUBERNETES_MANAGEMENT_TOOL) delete --ignore-not-found=$(IGNORE_NOT_FOUND) -f -
+
+.PHONY: undeploy-prod
+undeploy-prod: kustomize ## Undeploy Operator from the K8s cluster specified in ~/.kube/config (production environment). Call with ignore-not-found=true to ignore resource not found errors during deletion.
+	$(KUSTOMIZE) build $(OVERLAYS_PROD) | $(KUBERNETES_MANAGEMENT_TOOL) delete --ignore-not-found=$(IGNORE_NOT_FOUND) -f -
+
 ##@ Dependencies
 
 ## Location to install dependencies to
@@ -156,12 +197,14 @@ KUSTOMIZE ?= $(LOCALBIN)/kustomize
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest
 GOLANGCI_LINT = $(LOCALBIN)/golangci-lint
+HELMIFY ?= $(LOCALBIN)/helmify
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v5.4.3
-CONTROLLER_TOOLS_VERSION ?= v0.16.1
+CONTROLLER_TOOLS_VERSION ?= v0.17.1
 ENVTEST_VERSION ?= release-0.19
 GOLANGCI_LINT_VERSION ?= v1.59.1
+HELMIFY_VERSION ?= v0.4.20
 
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
@@ -183,6 +226,11 @@ golangci-lint: $(GOLANGCI_LINT) ## Download golangci-lint locally if necessary.
 $(GOLANGCI_LINT): $(LOCALBIN)
 	$(call go-install-tool,$(GOLANGCI_LINT),github.com/golangci/golangci-lint/cmd/golangci-lint,$(GOLANGCI_LINT_VERSION))
 
+.PHONY: helmify
+helmify: $(HELMIFY) ## Download helmify locally if necessary.
+$(HELMIFY): $(LOCALBIN)
+	$(call go-install-tool,$(HELMIFY),github.com/arttor/helmify/cmd/helmify,$(HELMIFY_VERSION))
+
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
 # $1 - target path with name of binary
 # $2 - package url which can be installed
@@ -198,3 +246,57 @@ mv $(1) $(1)-$(3) ;\
 } ;\
 ln -sf $(1)-$(3) $(1)
 endef
+
+##@ Helmify
+
+.PHONY: generate-chart
+generate-chart: helmify build-prod ## Generate Helm chart from the Kubernetes manifests.
+	@echo "Generating Helm chart from dist/install.yaml..."
+	$(HELMIFY) -f dist/install.yaml dist/chart
+
+##@ Helm Deployment
+
+## Helm binary to use for deploying the chart
+HELM ?= helm
+## Namespace to deploy the Helm release
+HELM_NAMESPACE ?= cron-restart-system
+## Name of the Helm release
+HELM_RELEASE ?= cron-restart
+## Path to the Helm chart directory
+HELM_CHART_DIR ?= dist/chart
+## Additional arguments to pass to helm commands
+HELM_EXTRA_ARGS ?=
+
+.PHONY: install-helm
+install-helm: ## Install the latest version of Helm.
+	@command -v $(HELM) >/dev/null 2>&1 || { \
+		echo "Installing Helm..." && \
+		curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-4 | bash; \
+	}
+
+.PHONY: helm-deploy
+helm-deploy: install-helm ## Deploy manager to the K8s cluster via Helm. Specify an image with IMG.
+	$(HELM) upgrade --install $(HELM_RELEASE) $(HELM_CHART_DIR) \
+		--namespace $(HELM_NAMESPACE) \
+		--create-namespace \
+		--set manager.image.repository=$${IMG%:*} \
+		--set manager.image.tag=$${IMG##*:} \
+		--wait \
+		--timeout 5m \
+		$(HELM_EXTRA_ARGS)
+
+.PHONY: helm-uninstall
+helm-uninstall: ## Uninstall the Helm release from the K8s cluster.
+	$(HELM) uninstall $(HELM_RELEASE) --namespace $(HELM_NAMESPACE)
+
+.PHONY: helm-status
+helm-status: ## Show Helm release status.
+	$(HELM) status $(HELM_RELEASE) --namespace $(HELM_NAMESPACE)
+
+.PHONY: helm-history
+helm-history: ## Show Helm release history.
+	$(HELM) history $(HELM_RELEASE) --namespace $(HELM_NAMESPACE)
+
+.PHONY: helm-rollback
+helm-rollback: ## Rollback to previous Helm release.
+	$(HELM) rollback $(HELM_RELEASE) --namespace $(HELM_NAMESPACE)

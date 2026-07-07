@@ -1,0 +1,410 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: cronrestarters.autorestart.uni.com
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.17.1
+  labels:
+  {{- include "chart.labels" . | nindent 4 }}
+spec:
+  group: autorestart.uni.com
+  names:
+    kind: CronRestarter
+    listKind: CronRestarterList
+    plural: cronrestarters
+    singular: cronrestarter
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - description: The cron schedule for restarting the target resource
+      jsonPath: .spec.schedule
+      name: Schedule
+      type: string
+    - description: The timezone for the cron schedule
+      jsonPath: .spec.timezone
+      name: TIMEZONE
+      priority: 1
+      type: string
+    - description: The dates to exclude from the cron schedule
+      jsonPath: .spec.excludeDates
+      name: EXCLUDE-DATES
+      priority: 1
+      type: string
+    - description: The target resource to be restarted
+      jsonPath: .spec.restartTargetRef
+      name: TARGET
+      priority: 1
+      type: string
+    - description: The last time the cron job was executed
+      jsonPath: .status.lastExecutionTime
+      name: LAST-EXEC
+      type: string
+    - description: The current state of the cron job
+      jsonPath: .status.state
+      name: STATE
+      type: string
+    name: v1
+    schema:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              excludeDates:
+                items:
+                  type: string
+                type: array
+              restartTargetRef:
+                properties:
+                  apiVersion:
+                    type: string
+                  kind:
+                    type: string
+                  name:
+                    type: string
+                required:
+                - apiVersion
+                - kind
+                - name
+                type: object
+              schedule:
+                description: |-
+                  Schedule is a cron expression that defines the schedule for restarting the target resource.
+                  It supports standard cron expressions as well as predefined schedules like "annually", "yearly", "monthly", "weekly", "daily", "midnight", "hourly", and "every".
+                pattern: ^((@hourly|@daily|@weekly|@monthly|@annually|@yearly|@midnight)|(@every\s+[0-9]+[smh])|((([0-59\*a-zA-Z0-9,\-\/]+)\s+){4}([0-7\*a-zA-Z0-9,\-\/]+)))$
+                type: string
+              timezone:
+                description: If schedule contains '@', the timezone will be ignored.
+                  Otherwise, the timezone will be used to determine the schedule.
+                type: string
+            required:
+            - restartTargetRef
+            - schedule
+            type: object
+          status:
+            properties:
+              conditions:
+                items:
+                  properties:
+                    lastProbeTime:
+                      format: date-time
+                      type: string
+                    message:
+                      type: string
+                    state:
+                      type: string
+                  required:
+                  - lastProbeTime
+                  - message
+                  - state
+                  type: object
+                type: array
+              entryId:
+                description: EntryID identifies an entry within a Cron instance
+                type: integer
+              lastExecutionTime:
+                format: date-time
+                type: string
+              lastTickTimestamp:
+                format: date-time
+                type: string
+              message:
+                type: string
+              processingTick:
+                format: date-time
+                type: string
+              state:
+                type: string
+            required:
+            - entryId
+            - message
+            - state
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+---
+{{ if .Values.serviceAccount.create }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "chart.serviceAccountName" . }}
+  labels:
+  {{- include "chart.labels" . | nindent 4 }}
+  {{- with .Values.serviceAccount.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
+{{- end }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "chart.fullname" . }}-leader-election-role
+  labels:
+  {{- include "chart.labels" . | nindent 4 }}
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "chart.fullname" . }}-manager-role
+  labels:
+  {{- include "chart.labels" . | nindent 4 }}
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+  - update
+- apiGroups:
+  - apps
+  resources:
+  - daemonsets
+  - deployments
+  - statefulsets
+  verbs:
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - autorestart.uni.com
+  resources:
+  - cronrestarters
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - autorestart.uni.com
+  resources:
+  - cronrestarters/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - autorestart.uni.com
+  resources:
+  - cronrestarters/status
+  verbs:
+  - get
+  - patch
+  - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "chart.fullname" . }}-metrics-auth-role
+  labels:
+  {{- include "chart.labels" . | nindent 4 }}
+rules:
+- apiGroups:
+  - authentication.k8s.io
+  resources:
+  - tokenreviews
+  verbs:
+  - create
+- apiGroups:
+  - authorization.k8s.io
+  resources:
+  - subjectaccessreviews
+  verbs:
+  - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "chart.fullname" . }}-metrics-reader
+  labels:
+  {{- include "chart.labels" . | nindent 4 }}
+rules:
+- nonResourceURLs:
+  - /metrics
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "chart.fullname" . }}-leader-election-rolebinding
+  labels:
+  {{- include "chart.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: '{{ include "chart.fullname" . }}-leader-election-role'
+subjects:
+- kind: ServiceAccount
+  name: '{{ include "chart.serviceAccountName" . }}'
+  namespace: '{{ .Release.Namespace }}'
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "chart.fullname" . }}-manager-rolebinding
+  labels:
+  {{- include "chart.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: '{{ include "chart.fullname" . }}-manager-role'
+subjects:
+- kind: ServiceAccount
+  name: '{{ include "chart.serviceAccountName" . }}'
+  namespace: '{{ .Release.Namespace }}'
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "chart.fullname" . }}-metrics-auth-rolebinding
+  labels:
+  {{- include "chart.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: '{{ include "chart.fullname" . }}-metrics-auth-role'
+subjects:
+- kind: ServiceAccount
+  name: '{{ include "chart.serviceAccountName" . }}'
+  namespace: '{{ .Release.Namespace }}'
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "chart.fullname" . }}-controller-manager-metrics-service
+  labels:
+    control-plane: controller-manager
+  {{- include "chart.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.metricsService.type }}
+  selector:
+    app.kubernetes.io/name: cron-restart
+    control-plane: controller-manager
+    {{- include "chart.selectorLabels" . | nindent 4 }}
+  ports:
+  {{- .Values.metricsService.ports | toYaml | nindent 2 }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "chart.fullname" . }}-controller-manager
+  labels:
+    control-plane: controller-manager
+  {{- include "chart.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.controllerManager.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cron-restart
+      control-plane: controller-manager
+    {{- include "chart.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cron-restart
+        control-plane: controller-manager
+      {{- include "chart.selectorLabels" . | nindent 8 }}
+      annotations:
+        kubectl.kubernetes.io/default-container: manager
+    spec:
+      containers:
+      - args: {{- toYaml .Values.controllerManager.manager.args | nindent 8 }}
+        command:
+        - /manager
+        env:
+        - name: TZ
+          value: {{ quote .Values.controllerManager.manager.env.tz }}
+        - name: KUBERNETES_CLUSTER_DOMAIN
+          value: {{ quote .Values.kubernetesClusterDomain }}
+        image: {{ .Values.controllerManager.manager.image.repository }}:{{ .Values.controllerManager.manager.image.tag
+          | default .Chart.AppVersion }}
+        imagePullPolicy: {{ .Values.controllerManager.manager.imagePullPolicy }}
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8081
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        name: manager
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8081
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources: {{- toYaml .Values.controllerManager.manager.resources | nindent 10
+          }}
+        securityContext: {{- toYaml .Values.controllerManager.manager.containerSecurityContext
+          | nindent 10 }}
+      nodeSelector: {{- toYaml .Values.controllerManager.nodeSelector | nindent 8 }}
+      securityContext: {{- toYaml .Values.controllerManager.podSecurityContext | nindent
+        8 }}
+      serviceAccountName: {{ include "chart.serviceAccountName" . }}
+      terminationGracePeriodSeconds: 10
+      tolerations: {{- toYaml .Values.controllerManager.tolerations | nindent 8 }}
+      topologySpreadConstraints: {{- toYaml .Values.controllerManager.topologySpreadConstraints
+        | nindent 8 }}

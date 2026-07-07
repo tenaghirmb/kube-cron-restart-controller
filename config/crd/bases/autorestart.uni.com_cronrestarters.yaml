@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.16.1
+    controller-gen.kubebuilder.io/version: v0.17.1
   name: cronrestarters.autorestart.uni.com
 spec:
   group: autorestart.uni.com
@@ -14,7 +14,35 @@ spec:
     singular: cronrestarter
   scope: Namespaced
   versions:
-  - name: v1
+  - additionalPrinterColumns:
+    - description: The cron schedule for restarting the target resource
+      jsonPath: .spec.schedule
+      name: Schedule
+      type: string
+    - description: The timezone for the cron schedule
+      jsonPath: .spec.timezone
+      name: TIMEZONE
+      priority: 1
+      type: string
+    - description: The dates to exclude from the cron schedule
+      jsonPath: .spec.excludeDates
+      name: EXCLUDE-DATES
+      priority: 1
+      type: string
+    - description: The target resource to be restarted
+      jsonPath: .spec.restartTargetRef
+      name: TARGET
+      priority: 1
+      type: string
+    - description: The last time the cron job was executed
+      jsonPath: .status.lastExecutionTime
+      name: LAST-EXEC
+      type: string
+    - description: The current state of the cron job
+      jsonPath: .status.state
+      name: STATE
+      type: string
+    name: v1
     schema:
       openAPIV3Schema:
         properties:
@@ -41,20 +69,6 @@ spec:
                 items:
                   type: string
                 type: array
-              jobs:
-                items:
-                  properties:
-                    name:
-                      type: string
-                    runOnce:
-                      type: boolean
-                    schedule:
-                      type: string
-                  required:
-                  - name
-                  - schedule
-                  type: object
-                type: array
               restartTargetRef:
                 properties:
                   apiVersion:
@@ -68,57 +82,58 @@ spec:
                 - kind
                 - name
                 type: object
+              schedule:
+                description: |-
+                  Schedule is a cron expression that defines the schedule for restarting the target resource.
+                  It supports standard cron expressions as well as predefined schedules like "annually", "yearly", "monthly", "weekly", "daily", "midnight", "hourly", and "every".
+                pattern: ^((@hourly|@daily|@weekly|@monthly|@annually|@yearly|@midnight)|(@every\s+[0-9]+[smh])|((([0-59\*a-zA-Z0-9,\-\/]+)\s+){4}([0-7\*a-zA-Z0-9,\-\/]+)))$
+                type: string
+              timezone:
+                description: If schedule contains '@', the timezone will be ignored.
+                  Otherwise, the timezone will be used to determine the schedule.
+                type: string
             required:
-            - jobs
             - restartTargetRef
+            - schedule
             type: object
           status:
             properties:
               conditions:
                 items:
                   properties:
-                    jobId:
-                      type: string
                     lastProbeTime:
                       format: date-time
                       type: string
                     message:
                       type: string
-                    name:
-                      type: string
-                    runOnce:
-                      type: boolean
-                    schedule:
-                      type: string
                     state:
                       type: string
                   required:
-                  - jobId
                   - lastProbeTime
                   - message
-                  - name
-                  - runOnce
-                  - schedule
                   - state
                   type: object
                 type: array
-              excludeDates:
-                items:
-                  type: string
-                type: array
-              restartTargetRef:
-                properties:
-                  apiVersion:
-                    type: string
-                  kind:
-                    type: string
-                  name:
-                    type: string
-                required:
-                - apiVersion
-                - kind
-                - name
-                type: object
+              entryId:
+                description: EntryID identifies an entry within a Cron instance
+                type: integer
+              lastExecutionTime:
+                format: date-time
+                type: string
+              lastTickTimestamp:
+                format: date-time
+                type: string
+              message:
+                type: string
+              processingTick:
+                format: date-time
+                type: string
+              state:
+                type: string
+            required:
+            - entryId
+            - message
+            - state
             type: object
         type: object
     served: true

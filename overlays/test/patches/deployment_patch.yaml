@@ -1,0 +1,9 @@
+- op: replace
+  path: /spec/replicas
+  value: 1  # 测试环境副本少，节约资源
+
+- op: replace
+  path: /spec/template/spec/containers/0/env
+  value:
+  - name: TZ
+    value: Asia/Shanghai

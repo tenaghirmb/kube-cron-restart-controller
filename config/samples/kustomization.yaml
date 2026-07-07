@@ -1,4 +1,5 @@
 ## Append samples of your project ##
 resources:
-- autorestart_v1_cronrestarter.yaml
+- autorestart.uni.com_v1_cronrestarter.yaml
+- nginx-deployment-basic.yaml
 # +kubebuilder:scaffold:manifestskustomizesamples
