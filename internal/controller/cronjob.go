@@ -127,8 +127,8 @@ func (cr *CronJobRestarter) ResultHandle(err error) {
 	ctx := context.Background()
 
 	var instance cronrestartv1.CronRestarter
-	if err := cr.client.Get(ctx, types.NamespacedName{Namespace: cr.RestarterRef.Namespace, Name: cr.RestarterRef.Name}, &instance); err != nil {
-		log.Errorf("failed to find cronRestarter %s in %s namespace, because of %v", cr.RestarterRef.Name, cr.RestarterRef.Namespace, err)
+	if e := cr.client.Get(ctx, types.NamespacedName{Namespace: cr.RestarterRef.Namespace, Name: cr.RestarterRef.Name}, &instance); e != nil {
+		log.Errorf("failed to find cronRestarter %s in %s namespace, because of %v", cr.RestarterRef.Name, cr.RestarterRef.Namespace, e)
 		return
 	}
 

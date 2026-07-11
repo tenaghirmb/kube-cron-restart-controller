@@ -37,24 +37,33 @@ type CronRestarterSpec struct {
 	// If schedule contains '@', the timezone will be ignored. Otherwise, the timezone will be used to determine the schedule.
 	// +kubebuilder:validation:Optional
 	Timezone string `json:"timezone,omitempty"`
+
 	// +kubebuilder:validation:Optional
 	ExcludeDates []string `json:"excludeDates,omitempty"`
+
 	// +kubebuilder:validation:Required
 	RestartTargetRef RestartTargetRef `json:"restartTargetRef"`
+
 	// Schedule is a cron expression that defines the schedule for restarting the target resource.
 	// It supports standard cron expressions as well as predefined schedules like "annually", "yearly", "monthly", "weekly", "daily", "midnight", "hourly", and "every".
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Pattern=`^((@hourly|@daily|@weekly|@monthly|@annually|@yearly|@midnight)|(@every\s+[0-9]+[smh])|((([0-59\*a-zA-Z0-9,\-\/]+)\s+){4}([0-7\*a-zA-Z0-9,\-\/]+)))$`
 	Schedule string `json:"schedule"`
+
+	// MisfirePolicy defines the behavior when a scheduled execution is missed.
+	// It can be set to "Ignore" (default) to skip missed executions, or "FireAndProceed" to execute the missed job immediately.
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Enum=Ignore;FireAndProceed
+	// +kubebuilder:default=Ignore
+	MisfirePolicy MisfirePolicy `json:"misfirePolicy,omitempty"`
+
+	// MisfireDeadWindowMinutes specifies the threshold in minutes.
+	// If the next regular execution time is closer than this window, the misfire recovery will be ignored.
+	// Default to 5 minutes if not specified.
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Minimum=1
+	MisfireDeadWindowMinutes *int32 `json:"misfireDeadWindowMinutes,omitempty"`
 }
-
-type JobState string
-
-const (
-	Succeed   JobState = "Succeed"
-	Failed    JobState = "Failed"
-	Submitted JobState = "Submitted"
-)
 
 type Condition struct {
 	State         JobState    `json:"state"`

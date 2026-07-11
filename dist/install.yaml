@@ -77,6 +77,23 @@ spec:
                 items:
                   type: string
                 type: array
+              misfireDeadWindowMinutes:
+                description: |-
+                  MisfireDeadWindowMinutes specifies the threshold in minutes.
+                  If the next regular execution time is closer than this window, the misfire recovery will be ignored.
+                  Default to 5 minutes if not specified.
+                format: int32
+                minimum: 1
+                type: integer
+              misfirePolicy:
+                default: Ignore
+                description: |-
+                  MisfirePolicy defines the behavior when a scheduled execution is missed.
+                  It can be set to "Ignore" (default) to skip missed executions, or "FireAndProceed" to execute the missed job immediately.
+                enum:
+                - Ignore
+                - FireAndProceed
+                type: string
               restartTargetRef:
                 properties:
                   apiVersion:

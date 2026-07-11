@@ -9,24 +9,30 @@
 
 # Table of Contents
 <!--ts-->
-   * [Features](#features)
-   * [Architecture Overview](#architecture-overview)
-   * [Tech Stack](#tech-stack)
-   * [Prerequisites](#prerequisites)
-   * [Installation](#installation)
-      * [Using Helm](#using-helm)
-      * [Using Kustomize](#using-kustomize)
-   * [Usage](#usage)
-   * [Configuration](#configuration)
-      * [restartTargetRef](#restarttargetref)
-      * [excludeDates](#excludedates)
-      * [schedule](#schedule)
-      * [cron expression](#cron-expression)
-         * [Special Characters](#special-characters)
-         * [Predefined Schedules](#predefined-schedules)
-         * [Intervals](#intervals)
-   * [Contributing](#contributing)
-   * [Licensing](#licensing)
+- [Table of Contents](#table-of-contents)
+  - [Features](#features)
+  - [Architecture Overview](#architecture-overview)
+    - [Why Not Native CronJobs?](#why-not-native-cronjobs)
+    - [Operator Sequence Diagram](#operator-sequence-diagram)
+  - [Tech Stack](#tech-stack)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+    - [Using Helm](#using-helm)
+    - [Using Kustomize](#using-kustomize)
+  - [Usage](#usage)
+  - [Configuration](#configuration)
+    - [timezone](#timezone)
+    - [restartTargetRef](#restarttargetref)
+    - [excludeDates](#excludedates)
+    - [schedule](#schedule)
+    - [misfirePolicy](#misfirepolicy)
+    - [misfireDeadWindowMinutes](#misfiredeadwindowminutes)
+    - [cron expression](#cron-expression)
+      - [Special Characters](#special-characters)
+      - [Predefined Schedules](#predefined-schedules)
+      - [Intervals](#intervals)
+  - [Contributing](#contributing)
+  - [Licensing](#licensing)
 <!--te-->
 
 ## Features
@@ -40,12 +46,61 @@
 
 A dual-layer orchestration engine combining a High-Performance in-Memory Registry with Kubernetes Atomic Status-Gatekeeping.
 
-**Why Not Native CronJobs?**
+### Why Not Native CronJobs?
 
 - **Resource Footprint**: Consumes 90% less etcd storage compared to 10000+ native CronJob objects.
 - **Execution Latency**: Sub-millisecond dispatching vs native kube-controller-manager polling delays.
 - **Reliability & Edge Cases Split-Brain Protection**: Leveraging Conditional Patching with ResourceVersion (OCC, Optimistic Concurrency Control) to ensure strict mutual exclusion in HA deployments.
 - **Misfire Compensation**: Automatically detects historical schedule gaps upon cold-start, ensuring critical maintenance windows are never missed.
+
+### Operator Sequence Diagram
+
+```text
+[Manager.Start]
+       │
+       ├─► [Async Start Cache] ────► Establish Watch, sync K8s resources
+       │
+       └─► [Async Start CronManager.Start]
+                 │
+                 ├─► [Action A: Immediately Start Engine] 
+                 │      │
+                 │      └─► cm.cronExecutor.Run() ──► Start Regular Clock (e.g., Locks 13:10 Tick)
+                 │
+                 └─► [Action B: Async Misfire Compensation Loop]
+                        │
+                        ▼
+                 [cm.misfireCompensate()]
+                        │
+                        ├─► 1. Fetch Snapshot List from Client Cache
+                        │
+                        ├─► 2. Queue in Concurrency Slot (Semaphore)
+                        │
+                        └─► 3. Execute Async Worker (e.g., Runs at 13:10:00)
+                                    │
+                                    ▼
+                       [Real-time Check Barrier]
+                                    │
+                        ┌───────────┴───────────┐
+                        ▼                       ▼
+            [13:10:00 Regular Clock]    [13:10:00 Async Compensate Worker]
+                        │                       │
+                        │                       ├─► cm.client.Get() (Fetch Latest State)
+                        │                       │
+                        ▼                       ▼
+                [Try Status Patch]      [Try Status Patch]
+             (ResourceVersion: 1001) (ResourceVersion: 1001)
+                        │                       │
+                        ▼                       ▼
+             ┌─────────────────────┐ ┌─────────────────────┐
+             │ Win the Race        │ │ Lose the Race       │
+             │ Status Patched!     │ │ K8s API returns:    │
+             │ RV updates to 1002  │ │ "Object Modified"   │
+             └─────────────────────┘ └─────────────────────┘
+                                                        │
+                                                        ▼
+                                             [OCC Conflict Defense]
+                                             Abort Compensation Safely!
+```
 
 ## Tech Stack
 
@@ -101,16 +156,10 @@ Try out the examples in the `config/samples` folder.
 2. Check the status of the deployment
 
     ```bash
-    [0] % kubectl get deploy nginx-deployment-basic
-    NAME                     READY   UP-TO-DATE   AVAILABLE   AGE
-    nginx-deployment-basic   1/1     1            1           16s
-    ```
-
-    ```bash
     [0] % kubectl describe deploy nginx-deployment-basic
     Name:                   nginx-deployment-basic
     Namespace:              default
-    CreationTimestamp:      Tue, 07 Jul 2026 22:43:04 +0800
+    CreationTimestamp:      Sat, 11 Jul 2026 15:52:41 +0800
     Labels:                 app=nginx
     Annotations:            deployment.kubernetes.io/revision: 1
     Selector:               app=nginx
@@ -146,7 +195,7 @@ Try out the examples in the `config/samples` folder.
     Events:
       Type    Reason             Age   From                   Message
       ----    ------             ----  ----                   -------
-      Normal  ScalingReplicaSet  35s   deployment-controller  Scaled up replica set nginx-deployment-basic-78d967d4dc from 0 to 1
+      Normal  ScalingReplicaSet  29s   deployment-controller  Scaled up replica set nginx-deployment-basic-78d967d4dc from 0 to 1
     ```
 
 3. Check the restart event
@@ -155,9 +204,9 @@ Try out the examples in the `config/samples` folder.
     [0] % kubectl describe deploy nginx-deployment-basic
     Name:                   nginx-deployment-basic
     Namespace:              default
-    CreationTimestamp:      Tue, 07 Jul 2026 22:43:04 +0800
+    CreationTimestamp:      Sat, 11 Jul 2026 15:52:41 +0800
     Labels:                 app=nginx
-    Annotations:            deployment.kubernetes.io/revision: 2
+    Annotations:            deployment.kubernetes.io/revision: 4
     Selector:               app=nginx
     Replicas:               1 desired | 1 updated | 1 total | 1 available | 0 unavailable
     StrategyType:           RollingUpdate
@@ -165,7 +214,7 @@ Try out the examples in the `config/samples` folder.
     RollingUpdateStrategy:  25% max unavailable, 25% max surge
     Pod Template:
       Labels:       app=nginx
-      Annotations:  kubectl.kubernetes.io/restartedAt: 2026-07-07T14:50:00Z
+      Annotations:  kubectl.kubernetes.io/restartedAt: 2026-07-11T09:11:39Z
       Containers:
       nginx:
         Image:      nginx:alpine
@@ -187,14 +236,13 @@ Try out the examples in the `config/samples` folder.
       ----           ------  ------
       Available      True    MinimumReplicasAvailable
       Progressing    True    NewReplicaSetAvailable
-    OldReplicaSets:  nginx-deployment-basic-78d967d4dc (0/0 replicas created)
-    NewReplicaSet:   nginx-deployment-basic-66b9c6c69d (1/1 replicas created)
+    OldReplicaSets:  nginx-deployment-basic-78d967d4dc (0/0 replicas created), nginx-deployment-basic-7fd79bd599 (0/0 replicas created), nginx-deployment-basic-797ddf8cfb (0/0 replicas created)
+    NewReplicaSet:   nginx-deployment-basic-59fd945788 (1/1 replicas created)
     Events:
-      Type    Reason             Age    From                   Message
-      ----    ------             ----   ----                   -------
-      Normal  ScalingReplicaSet  7m14s  deployment-controller  Scaled up replica set nginx-deployment-basic-78d967d4dc from 0 to 1
-      Normal  ScalingReplicaSet  18s    deployment-controller  Scaled up replica set nginx-deployment-basic-66b9c6c69d from 0 to 1
-      Normal  ScalingReplicaSet  16s    deployment-controller  Scaled down replica set nginx-deployment-basic-78d967d4dc from 1 to 0
+      Type    Reason             Age   From                   Message
+      ----    ------             ----  ----                   -------
+      Normal  ScalingReplicaSet  46s   deployment-controller  Scaled up replica set nginx-deployment-basic-59fd945788 from 0 to 1
+      Normal  ScalingReplicaSet  45s   deployment-controller  Scaled down replica set nginx-deployment-basic-797ddf8cfb from 1 to 0
     ```
 
 4. Describe the cronrestarter
@@ -209,40 +257,102 @@ Try out the examples in the `config/samples` folder.
     API Version:  autorestart.uni.com/v1
     Kind:         CronRestarter
     Metadata:
-      Creation Timestamp:  2026-07-07T14:43:04Z
+      Creation Timestamp:  2026-07-11T07:52:42Z
       Finalizers:
         cronrestarter.finalizers.uni.com
       Generation:        1
-      Resource Version:  3425273
-      UID:               b6de7835-0f00-4a4e-9b77-6205ebb2e64d
+      Resource Version:  3525084
+      UID:               6f67a902-69c5-4553-9099-823b0ea55a0b
     Spec:
       Exclude Dates:
         * * 4 6 *
         * * * * 5
+      Misfire Dead Window Minutes:  3
+      Misfire Policy:               FireAndProceed
       Restart Target Ref:
         API Version:  apps/v1
         Kind:         Deployment
         Name:         nginx-deployment-basic
-      Schedule:       */10 22 * * *
+      Schedule:       */10 15-23 * * *
       Timezone:       Asia/Shanghai
     Status:
       Conditions:
-        Last Probe Time:    2026-07-07T14:50:01Z
+        Last Probe Time:    2026-07-11T08:00:01Z
         Message:            cron restarter job cronrestarter-sample executed successfully.
         State:              Succeed
-      Entry Id:             1
-      Last Execution Time:  2026-07-07T14:50:00Z
-      Last Tick Timestamp:  2026-07-07T14:50:00Z
+        Last Probe Time:    2026-07-11T08:10:03Z
+        Message:            cron restarter job cronrestarter-sample executed successfully.
+        State:              Succeed
+        Last Probe Time:    2026-07-11T09:11:39Z
+        Message:            cron restarter job cronrestarter-sample executed successfully.
+        State:              Succeed
+      Entry Id:             0
+      Last Execution Time:  2026-07-11T09:11:39Z
+      Last Tick Timestamp:  2026-07-11T09:11:38Z
       Message:              cron restarter job cronrestarter-sample executed successfully.
       State:                Succeed
     Events:
       Type    Reason   Age   From           Message
       ----    ------   ----  ----           -------
-      Normal  Succeed  83s   CronRestarter  cron restarter job cronrestarter-sample executed successfully.
+      Normal  Succeed  87s   CronRestarter  cron restarter job cronrestarter-sample executed successfully.
+    ```
+
+    ```bash
+    [0] % kubectl describe cronrestarters cronrestarter-sample
+    Name:         cronrestarter-sample
+    Namespace:    default
+    Labels:       app.kubernetes.io/managed-by=kustomize
+                  app.kubernetes.io/name=cron-restart
+    Annotations:  <none>
+    API Version:  autorestart.uni.com/v1
+    Kind:         CronRestarter
+    Metadata:
+      Creation Timestamp:  2026-07-11T07:52:42Z
+      Finalizers:
+        cronrestarter.finalizers.uni.com
+      Generation:        1
+      Resource Version:  3525271
+      UID:               6f67a902-69c5-4553-9099-823b0ea55a0b
+    Spec:
+      Exclude Dates:
+        * * 4 6 *
+        * * * * 5
+      Misfire Dead Window Minutes:  3
+      Misfire Policy:               FireAndProceed
+      Restart Target Ref:
+        API Version:  apps/v1
+        Kind:         Deployment
+        Name:         nginx-deployment-basic
+      Schedule:       */10 15-23 * * *
+      Timezone:       Asia/Shanghai
+    Status:
+      Conditions:
+        Last Probe Time:    2026-07-11T08:00:01Z
+        Message:            cron restarter job cronrestarter-sample executed successfully.
+        State:              Succeed
+        Last Probe Time:    2026-07-11T08:10:03Z
+        Message:            cron restarter job cronrestarter-sample executed successfully.
+        State:              Succeed
+        Last Probe Time:    2026-07-11T09:11:39Z
+        Message:            cron restarter job cronrestarter-sample executed successfully.
+        State:              Succeed
+        Last Probe Time:    2026-07-11T09:20:01Z
+        Message:            cron restarter job cronrestarter-sample executed successfully.
+        State:              Succeed
+      Entry Id:             1
+      Last Execution Time:  2026-07-11T09:20:01Z
+      Last Tick Timestamp:  2026-07-11T09:20:00Z
+      Message:              cron restarter job cronrestarter-sample executed successfully.
+      State:                Succeed
+    Events:
+      Type    Reason   Age                  From           Message
+      ----    ------   ----                 ----           -------
+      Normal  Succeed  14s (x2 over 8m36s)  CronRestarter  cron restarter job cronrestarter-sample executed successfully.
     ```
 
     > The `Status.Conditions` holds the latest 10 restarting execution results;
-    > The `Status.State` indicates its execution status. When the `State` is `Succeed`, it means the last execution was successful. When the `State` is `Submitted`, it means the cronrestart job has been submitted to the cron engine and is waiting to be executed. When the `State` is `Failed`, it means the last execution failed.
+    > The `Status.State` indicates its execution status. When the `State` is `Succeed`, it means the last execution was successful. When the `State` is `Submitted`, it means the cronrestart job has been submitted to the cron engine and is waiting to be executed. When the `State` is `Failed`, it means the last execution failed;
+    > The `Status.EntryId` indicates the sequential number of the cronrestart job in the cron engine. When the `EntryId` is `0`, it means the job was compensated by CronManager.
 
 5. Uninstall Samples
 
@@ -253,26 +363,34 @@ Try out the examples in the `config/samples` folder.
 6. Check controller's log
 
     ```log
-    2026-07-07T22:42:39.341+0800	[INFO][PID:58719]	cmd/main.go:185	starting manager
-    2026-07-07T22:42:39.341+0800	[INFO][PID:58719]	controller-runtime.metrics	server/server.go:208	Starting metrics server
-    2026-07-07T22:42:39.341+0800	[INFO][PID:58719]	manager/server.go:83	starting server	{"name": "pprof", "addr": "127.0.0.1:7007"}
-    2026-07-07T22:42:39.342+0800	[INFO][PID:58719]	controller-runtime.metrics	server/server.go:247	Serving metrics server	{"bindAddress": ":8443", "secure": false}
-    2026-07-07T22:42:39.342+0800	[INFO][PID:58719]	manager/server.go:83	starting server	{"name": "health probe", "addr": "[::]:8081"}
-    2026-07-07T22:42:39.342+0800	[INFO][PID:58719]	controller/controller.go:369	Starting EventSource	{"controller": "cronrestarter", "controllerGroup": "autorestart.uni.com", "controllerKind": "CronRestarter", "source": "kind source: *v1.CronRestarter"}
-    2026-07-07T22:42:41.857+0800	[INFO][PID:58719]	controller/controller.go:302	Starting Controller	{"controller": "cronrestarter", "controllerGroup": "autorestart.uni.com", "controllerKind": "CronRestarter"}
-    2026-07-07T22:42:41.858+0800	[INFO][PID:58719]	controller/controller.go:305	Starting workers	{"controller": "cronrestarter", "controllerGroup": "autorestart.uni.com", "controllerKind": "CronRestarter", "worker count": 1}
-    2026-07-07T22:43:04.335+0800	[INFO][PID:58719]	controller/cronrestarter_controller.go:89	Start to handle cronRestarter cronrestarter-sample in default namespace
-    2026-07-07T22:43:04.771+0800	[INFO][PID:58719]	log/warning_handler.go:64	metadata.finalizers: "cronrestarter.finalizers.uni.com": prefer a domain-qualified finalizer name including a path (/) to avoid accidental conflicts with other finalizer writers	{"controller": "cronrestarter", "controllerGroup": "autorestart.uni.com", "controllerKind": "CronRestarter", "CronRestarter": {"name":"cronrestarter-sample","namespace":"default"}, "namespace": "default", "name": "cronrestarter-sample", "reconcileID": "71251341-269a-443d-8bc4-90ec08ab46e5"}
-    2026-07-07T22:43:04.772+0800	[INFO][PID:58719]	controller/cronrestarter_controller.go:128	Add finalizer for cronRestarter cronrestarter-sample in default namespace
-    2026-07-07T22:43:04.772+0800	[INFO][PID:58719]	controller/cronmanager.go:35	cronRestarter job cronrestarter-sample of cronRestarter cronrestarter-sample in default updated, 1 active jobs exist
-    2026-07-07T22:50:00.695+0800	[INFO][PID:58719]	controller/cronjob.go:240	Deployment nginx-deployment-basic in namespace default has been restarted successfully. cronRestarter: cronrestarter-sample id: 2cd097d5-51a3-54b2-85e7-7d7553c103f2
-    2026-07-07T22:50:01.944+0800	[DEBUG][PID:58719]	events	recorder/recorder.go:116	cron restarter job cronrestarter-sample executed successfully.	{"type": "Normal", "object": {"kind":"CronRestarter","namespace":"default","name":"cronrestarter-sample","uid":"b6de7835-0f00-4a4e-9b77-6205ebb2e64d","apiVersion":"autorestart.uni.com/v1","resourceVersion":"3425273"}, "reason": "Succeed"}
-    2026-07-07T22:55:03.357+0800	[INFO][PID:58719]	controller/cronrestarter_controller.go:89	Start to handle cronRestarter cronrestarter-sample in default namespace
-    2026-07-07T22:55:03.357+0800	[INFO][PID:58719]	controller/cronrestarter_controller.go:102	cronRestarter cronrestarter-sample in default namespace is marked to be deleted
-    2026-07-07T22:55:03.357+0800	[INFO][PID:58719]	controller/cronmanager.go:45	Remove cronRestarter job cronrestarter-sample of cronRestarter cronrestarter-sample in default from jobQueue,0 active jobs left
-    2026-07-07T22:55:03.749+0800	[INFO][PID:58719]	controller/cronrestarter_controller.go:115	Remove finalizer for cronRestarter cronrestarter-sample in default namespace
-    2026-07-07T22:55:03.749+0800	[INFO][PID:58719]	controller/cronrestarter_controller.go:117	cronRestarter cronrestarter-sample in default namespace has been finalized successfully. cronId: 2cd097d5-51a3-54b2-85e7-7d7553c103f2
-    2026-07-07T22:55:03.750+0800	[INFO][PID:58719]	controller/cronrestarter_controller.go:89	Start to handle cronRestarter cronrestarter-sample in default namespace
+    2026-07-11T17:11:36.445+0800	[INFO][PID:4325]	cmd/main.go:185	starting manager
+    2026-07-11T17:11:36.446+0800	[INFO][PID:4325]	manager/server.go:83	starting server	{"name": "health probe", "addr": "[::]:8081"}
+    2026-07-11T17:11:36.446+0800	[INFO][PID:4325]	controller-runtime.metrics	server/server.go:208	Starting metrics server
+    2026-07-11T17:11:36.447+0800	[INFO][PID:4325]	manager/server.go:83	starting server	{"name": "pprof", "addr": "127.0.0.1:7007"}
+    2026-07-11T17:11:36.447+0800	[INFO][PID:4325]	controller/cronmanager.go:57	Starting CronManager component...
+    2026-07-11T17:11:36.447+0800	[INFO][PID:4325]	controller/cronmanager.go:61	Regular Cron Engine Clock has been activated successfully.
+    2026-07-11T17:11:36.447+0800	[INFO][PID:4325]	controller-runtime.metrics	server/server.go:247	Serving metrics server	{"bindAddress": ":8443", "secure": false}
+    2026-07-11T17:11:36.447+0800	[INFO][PID:4325]	controller/cronmanager.go:147	Starting asynchronous misfire compensation loop...
+    2026-07-11T17:11:36.448+0800	[INFO][PID:4325]	controller/cronmanager.go:79	GC loop initialized to run every 10m0s
+    2026-07-11T17:11:36.448+0800	[INFO][PID:4325]	controller/controller.go:369	Starting EventSource	{"controller": "cronrestarter", "controllerGroup": "autorestart.uni.com", "controllerKind": "CronRestarter", "source": "kind source: *v1.CronRestarter"}
+    2026-07-11T17:11:37.943+0800	[INFO][PID:4325]	controller/cronmanager.go:203	[Compensate Worker] Confirmed missed schedule for default/cronrestarter-sample. Executing compensatory run.
+    2026-07-11T17:11:38.043+0800	[INFO][PID:4325]	controller/controller.go:302	Starting Controller	{"controller": "cronrestarter", "controllerGroup": "autorestart.uni.com", "controllerKind": "CronRestarter"}
+    2026-07-11T17:11:38.043+0800	[INFO][PID:4325]	controller/controller.go:305	Starting workers	{"controller": "cronrestarter", "controllerGroup": "autorestart.uni.com", "controllerKind": "CronRestarter", "worker count": 1}
+    2026-07-11T17:11:38.044+0800	[INFO][PID:4325]	controller/cronrestarter_controller.go:83	Start to handle cronRestarter cronrestarter-sample in default namespace
+    2026-07-11T17:11:38.045+0800	[INFO][PID:4325]	controller/cronmanager.go:40	cronRestarter job cronrestarter-sample of cronRestarter cronrestarter-sample in default updated, 1 active jobs exist
+    2026-07-11T17:11:39.572+0800	[INFO][PID:4325]	controller/cronjob.go:240	Deployment nginx-deployment-basic in namespace default has been restarted successfully. cronRestarter: cronrestarter-sample id: 
+    2026-07-11T17:11:39.980+0800	[INFO][PID:4325]	controller/cronmanager.go:182	All asynchronous misfire compensations completed.
+    2026-07-11T17:11:39.979+0800	[DEBUG][PID:4325]	events	recorder/recorder.go:116	cron restarter job cronrestarter-sample executed successfully.	{"type": "Normal", "object": {"kind":"CronRestarter","namespace":"default","name":"cronrestarter-sample","uid":"6f67a902-69c5-4553-9099-823b0ea55a0b","apiVersion":"autorestart.uni.com/v1","resourceVersion":"3525084"}, "reason": "Succeed"}
+    2026-07-11T17:20:01.028+0800	[INFO][PID:4325]	controller/cronjob.go:240	Deployment nginx-deployment-basic in namespace default has been restarted successfully. cronRestarter: cronrestarter-sample id: 2cd097d5-51a3-54b2-85e7-7d7553c103f2
+    2026-07-11T17:20:01.841+0800	[DEBUG][PID:4325]	events	recorder/recorder.go:116	cron restarter job cronrestarter-sample executed successfully.	{"type": "Normal", "object": {"kind":"CronRestarter","namespace":"default","name":"cronrestarter-sample","uid":"6f67a902-69c5-4553-9099-823b0ea55a0b","apiVersion":"autorestart.uni.com/v1","resourceVersion":"3525271"}, "reason": "Succeed"}
+    2026-07-11T17:21:36.461+0800	[INFO][PID:4325]	controller/cronmanager.go:84	Triggering routine garbage collection...
+    2026-07-11T17:23:27.525+0800	[INFO][PID:4325]	controller/cronrestarter_controller.go:83	Start to handle cronRestarter cronrestarter-sample in default namespace
+    2026-07-11T17:23:27.526+0800	[INFO][PID:4325]	controller/cronrestarter_controller.go:96	cronRestarter cronrestarter-sample in default namespace is marked to be deleted
+    2026-07-11T17:23:27.526+0800	[INFO][PID:4325]	controller/cronmanager.go:50	Remove cronRestarter job cronrestarter-sample of cronRestarter cronrestarter-sample in default from jobQueue,0 active jobs left
+    2026-07-11T17:23:27.734+0800	[INFO][PID:4325]	controller/cronrestarter_controller.go:109	Remove finalizer for cronRestarter cronrestarter-sample in default namespace
+    2026-07-11T17:23:27.734+0800	[INFO][PID:4325]	controller/cronrestarter_controller.go:111	cronRestarter cronrestarter-sample in default namespace has been finalized successfully. cronId: 2cd097d5-51a3-54b2-85e7-7d7553c103f2
+    2026-07-11T17:23:27.735+0800	[INFO][PID:4325]	controller/cronrestarter_controller.go:83	Start to handle cronRestarter cronrestarter-sample in default namespace
+    2026-07-11T17:31:36.476+0800	[INFO][PID:4325]	controller/cronmanager.go:84	Triggering routine garbage collection...
     ```
 
 ## Configuration
@@ -298,8 +416,14 @@ spec:
    - "* * 4 6 *"
    # exclude every Friday 
    - "* * * * 5"
-  schedule: "*/10 22 * * *"
+  schedule: "*/10 15-23 * * *"
+  misfirePolicy: FireAndProceed
+  misfireDeadWindowMinutes: 3
 ```
+
+### timezone
+
+The `timezone` field specifies the time zone of the task. If schedule contains '@', the timezone will be ignored. Otherwise, the timezone will be used to determine the schedule.
 
 ### restartTargetRef
 
@@ -317,7 +441,15 @@ The `excludeDates` field is an array of dates. The job will skip execution when 
 ### schedule
 
 The `schedule` field is a cron expression that defines the schedule for restarting the target resource.
-  
+
+### misfirePolicy
+
+The `misfirePolicy` field defines the behavior when a scheduled execution is missed. It can be set to "Ignore" (default) to skip missed executions, or "FireAndProceed" to execute the missed job immediately(If multiple execution windows are missed during a controller outage, the system collapses them into a single recovery execution).
+
+### misfireDeadWindowMinutes
+
+The `misfireDeadWindowMinutes` specifies the threshold in minutes. If the next regular execution time is closer than this window, the misfire recovery will be ignored. Default to 5 minutes if not specified.
+
 ### cron expression
 
 The cron expression format is described below:

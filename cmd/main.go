@@ -92,12 +92,12 @@ func main() {
 		},
 	}
 
-	opts.ZapOpts = append(opts.ZapOpts, uberzap.AddCaller(), uberzap.AddCallerSkip(0))
+	opts.ZapOpts = append(opts.ZapOpts, uberzap.AddCaller())
 
-	logrLogger := zap.New(zap.UseFlagOptions(&opts)) //
+	logger := zap.New(zap.UseFlagOptions(&opts)) //
 
-	ctrl.SetLogger(logrLogger)
-	log.SetLogger(logrLogger)
+	ctrl.SetLogger(logger)
+	log.SetLogger(logger)
 
 	// if the enable-http2 flag is false (the default), http/2 should be disabled
 	// due to its vulnerabilities. More specifically, disabling http/2 will

@@ -13,9 +13,10 @@ const (
 	JobTimeOut          = FailedFindJobReason("JobTimeOut")
 
 	// cronmanager.go
-	MaxRetryTimes = 3
-	GCInterval    = 10 * time.Minute
-	MaxConditions = 10
+	MaxRetryTimes        = 3
+	GCInterval           = 10 * time.Minute
+	MaxConditions        = 10
+	MaxConcurrentMisfire = 5
 
 	// cronjob.go
 	UpdateRetryInterval = 3 * time.Second

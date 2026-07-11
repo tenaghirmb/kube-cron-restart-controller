@@ -45,7 +45,7 @@ type CronRestarterReconciler struct {
 }
 
 func NewCronRestarterReconciler(mgr manager.Manager) *CronRestarterReconciler {
-	cm := NewCronManager(mgr.GetConfig(), mgr.GetClient())
+	cm := NewCronManager(mgr.GetClient(), mgr.GetEventRecorderFor("CronRestarter"))
 	r := &CronRestarterReconciler{
 		Client:        mgr.GetClient(),
 		APIReader:     mgr.GetAPIReader(),
@@ -54,15 +54,9 @@ func NewCronRestarterReconciler(mgr manager.Manager) *CronRestarterReconciler {
 		CronManager:   cm,
 	}
 
-	err := mgr.Add(manager.RunnableFunc(func(ctx context.Context) error {
-		cm.Run(ctx)
-		return nil
-	}))
-
-	if err != nil {
+	if err := mgr.Add(cm); err != nil {
 		panic(fmt.Sprintf("unable to add CronManager to manager: %v", err))
 	}
-
 	return r
 }
 

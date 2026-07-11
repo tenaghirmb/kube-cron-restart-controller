@@ -16,4 +16,6 @@ spec:
    - "* * 4 6 *"
    # exclude every Friday 
    - "* * * * 5"
-  schedule: "*/10 22 * * *"
+  schedule: "*/10 15-23 * * *"
+  misfirePolicy: FireAndProceed
+  misfireDeadWindowMinutes: 3
