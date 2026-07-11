@@ -1,0 +1,5 @@
+owner: tenaghirmb
+git-repo: kube-cron-restart-controller
+charts-dir: dist/chart # The parent directory where your Helm files are stored
+package-path: .cr-release-packages # Consistent with the storage path in the packaging command above
+branch: gh-pages # Host a separate branch of the Helm repository

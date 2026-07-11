@@ -394,7 +394,7 @@ spec:
         env:
         - name: TZ
           value: Asia/Shanghai
-        image: docker.io/tenaghirmb/cronrestart:v2.0
+        image: docker.io/tenaghirmb/cronrestart:v2.0.0
         imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:

@@ -14,7 +14,7 @@ controllerManager:
       tz: Asia/Shanghai
     image:
       repository: docker.io/tenaghirmb/cronrestart
-      tag: v2.0
+      tag: v2.0.0
     imagePullPolicy: IfNotPresent
     resources:
       limits:

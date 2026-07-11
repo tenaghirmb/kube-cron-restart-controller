@@ -130,7 +130,14 @@ A dual-layer orchestration engine combining a High-Performance in-Memory Registr
 ### Using Helm
 
 ```bash
-make helm-deploy IMG=docker.io/tenaghirmb/cronrestart:v2.0
+# 1. From Source
+make helm-deploy IMG=docker.io/tenaghirmb/cronrestart:v2.0.0
+# 2. Using Repo
+helm repo add helm-charts https://tenaghirmb.github.io/kube-cron-restart-controller/
+
+helm repo update
+
+helm install cronrestart helm-charts/cronrestart
 ```
 
 ### Using Kustomize

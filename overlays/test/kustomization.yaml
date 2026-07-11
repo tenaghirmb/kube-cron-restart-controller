@@ -7,7 +7,7 @@ resources:
 images:
 - name: controller
   newName: docker.io/tenaghirmb/cronrestart
-  newTag: v2.0-rc
+  newTag: v2.0.0-rc
 
 patches:
 - path: patches/deployment_patch.yaml
