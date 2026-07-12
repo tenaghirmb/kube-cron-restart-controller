@@ -17,6 +17,7 @@ const (
 	GCInterval           = 10 * time.Minute
 	MaxConditions        = 10
 	MaxConcurrentMisfire = 5
+	HTTPServerAddress    = ":9887"
 
 	// cronjob.go
 	UpdateRetryInterval = 3 * time.Second

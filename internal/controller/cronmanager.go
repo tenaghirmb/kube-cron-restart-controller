@@ -62,6 +62,8 @@ func (cm *CronManager) Start(ctx context.Context) error {
 
 	go cm.misfireCompensate(ctx)
 
+	go NewHTTPServer(constants.HTTPServerAddress, cm).Start(ctx)
+
 	go cm.gcLoop(ctx)
 
 	<-ctx.Done()
