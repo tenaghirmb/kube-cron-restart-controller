@@ -28,6 +28,7 @@ import (
 
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -86,6 +87,23 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(k8sClient).NotTo(BeNil())
 
+	// 1. 创建用于测试的 Manager
+	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
+		Scheme: scheme.Scheme,
+	})
+	Expect(err).NotTo(HaveOccurred())
+
+	// 2. 🛡️ 修改点：调用你编写的工厂方法，确保 CronManager 被正确初始化并注册到 manager 中
+	reconciler := NewCronRestarterReconciler(mgr)
+	err = reconciler.SetupWithManager(mgr)
+	Expect(err).NotTo(HaveOccurred())
+
+	// 3. 在后台协程中启动 Manager
+	go func() {
+		defer GinkgoRecover()
+		err = mgr.Start(ctx)
+		Expect(err).NotTo(HaveOccurred())
+	}()
 })
 
 var _ = AfterSuite(func() {
