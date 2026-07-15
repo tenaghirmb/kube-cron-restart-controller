@@ -1,6 +1,7 @@
 <!-- markdownlint-disable-next-line MD033 -->
 <h1>kube-cron-restart-controller</h1>
 
+[![Release App and Helm Chart](https://github.com/tenaghirmb/kube-cron-restart-controller/actions/workflows/release.yml/badge.svg)](https://github.com/tenaghirmb/kube-cron-restart-controller/actions/workflows/release.yml)
 [![TOC Automation](https://github.com/tenaghirmb/kube-cron-restart-controller/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/tenaghirmb/kube-cron-restart-controller/actions/workflows/main.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](https://opensource.org)
 [![BuyMeACoffee](https://raw.githubusercontent.com/pachadotdev/buymeacoffee-badges/main/bmc-donate-yellow.svg)](https://www.buymeacoffee.com/tenaghirmb)
