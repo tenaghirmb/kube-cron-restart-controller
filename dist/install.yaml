@@ -390,7 +390,7 @@ spec:
         - --leader-elect
         - --health-probe-bind-address=:8081
         command:
-        - /manager
+        - /app/manager
         env:
         - name: TZ
           value: Asia/Shanghai

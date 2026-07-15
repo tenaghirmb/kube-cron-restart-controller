@@ -391,7 +391,7 @@ spec:
       containers:
       - args: {{- toYaml .Values.controllerManager.manager.args | nindent 8 }}
         command:
-        - /manager
+        - /app/manager
         env:
         - name: TZ
           value: {{ quote .Values.controllerManager.manager.env.tz }}
