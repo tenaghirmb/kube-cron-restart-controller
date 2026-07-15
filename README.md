@@ -9,29 +9,30 @@
 
 # Table of Contents
 <!--ts-->
-   * [Features](#features)
-   * [Architecture Overview](#architecture-overview)
-      * [Why Not Native CronJobs?](#why-not-native-cronjobs)
-      * [Operator Sequence Diagram](#operator-sequence-diagram)
-   * [Tech Stack](#tech-stack)
-   * [Prerequisites](#prerequisites)
-   * [Installation](#installation)
-      * [Using Helm](#using-helm)
-      * [Using Kustomize](#using-kustomize)
-   * [Usage](#usage)
-   * [Configuration](#configuration)
-      * [timezone](#timezone)
-      * [restartTargetRef](#restarttargetref)
-      * [excludeDates](#excludedates)
-      * [schedule](#schedule)
-      * [misfirePolicy](#misfirepolicy)
-      * [misfireDeadWindowMinutes](#misfiredeadwindowminutes)
-      * [cron expression](#cron-expression)
-         * [Special Characters](#special-characters)
-         * [Predefined Schedules](#predefined-schedules)
-         * [Intervals](#intervals)
-   * [Contributing](#contributing)
-   * [Licensing](#licensing)
+- [Table of Contents](#table-of-contents)
+  - [Features](#features)
+  - [Architecture Overview](#architecture-overview)
+    - [Why Not Native CronJobs?](#why-not-native-cronjobs)
+    - [Operator Sequence Diagram](#operator-sequence-diagram)
+  - [Tech Stack](#tech-stack)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+    - [Using Helm](#using-helm)
+    - [Using Kustomize](#using-kustomize)
+  - [Usage](#usage)
+  - [Configuration](#configuration)
+    - [timezone](#timezone)
+    - [restartTargetRef](#restarttargetref)
+    - [excludeDates](#excludedates)
+    - [schedule](#schedule)
+    - [misfirePolicy](#misfirepolicy)
+    - [misfireDeadWindowMinutes](#misfiredeadwindowminutes)
+    - [cron expression](#cron-expression)
+      - [Special Characters](#special-characters)
+      - [Predefined Schedules](#predefined-schedules)
+      - [Intervals](#intervals)
+  - [Contributing](#contributing)
+  - [Licensing](#licensing)
 <!--te-->
 
 ## Features
@@ -132,7 +133,7 @@ A dual-layer orchestration engine combining a High-Performance in-Memory Registr
 # 1. From Source
 make helm-deploy IMG=docker.io/tenaghirmb/cronrestart:v2.0.0
 # 2. Using Repo
-helm repo add helm-charts https://tenaghirmb.github.io/kube-cron-restart-controller/
+helm repo add helm-charts https://tenaghirmb.github.io/cronrestart/
 helm repo update
 helm install cronrestart helm-charts/cronrestart
 ```
