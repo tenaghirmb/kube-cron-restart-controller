@@ -83,6 +83,14 @@ jobs:
           mkdir -p .cr-release-packages
           helm package ${CHART_DIR} -d .cr-release-packages
 
+      # ==========================================
+      # 配置 Git 机器人身份（解决 Author identity unknown 报错）
+      # ==========================================
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: Deploy Helm Chart to GitHub Pages
         uses: helm/chart-releaser-action@v1.6.0
         with:
