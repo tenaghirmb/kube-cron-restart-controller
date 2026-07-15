@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  cronrestart:
+  - apiVersion: v2
+    appVersion: 2.0.0
+    created: "2026-07-15T09:08:40.573136542Z"
+    description: A Helm chart for Kubernetes
+    digest: eaff50a1cb2d276138e41bbbcd93b65eed3ae7363091cd3bae5d35e1de223810
+    name: cronrestart
+    type: application
+    urls:
+    - https://github.com/tenaghirmb/kube-cron-restart-controller/releases/download/cronrestart-2.0.0/cronrestart-2.0.0.tgz
+    version: 2.0.0
+generated: "2026-07-15T09:08:40.573141681Z"
