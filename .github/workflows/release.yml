@@ -67,6 +67,7 @@ jobs:
           VERSION="${{ steps.get_version.outputs.VERSION }}"
           
           # 1. Modify the version number and application version number in Chart.yaml
+          tr -d '\r' < ${CHART_DIR}/Chart.yaml > ${CHART_DIR}/Chart.yaml.tmp && mv ${CHART_DIR}/Chart.yaml.tmp ${CHART_DIR}/Chart.yaml
           sed -i "s/^version:.*/version: ${VERSION}/g" ${CHART_DIR}/Chart.yaml
           sed -i "s/^appVersion:.*/appVersion: \"${VERSION}\"/g" ${CHART_DIR}/Chart.yaml
           
@@ -80,7 +81,7 @@ jobs:
           CHART_DIR="dist/chart"
           # Create a temporary directory to store the packaged files
           mkdir -p .cr-release-packages
-          helm package ${CHART_DIR} --destination .cr-release-packages
+          helm package ${CHART_DIR} -d .cr-release-packages
 
       - name: Deploy Helm Chart to GitHub Pages
         uses: helm/chart-releaser-action@v1.6.0
