@@ -86,5 +86,6 @@ jobs:
         uses: helm/chart-releaser-action@v1.6.0
         with:
           config: .github/cr.yaml # Configuration file of chart-releaser
+          skip_packaging: true
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
