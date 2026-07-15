@@ -76,13 +76,6 @@ jobs:
           sed -i "s|repository:.*|repository: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/cronrestart|g" ${CHART_DIR}/values.yaml
           sed -i "s|tag:.*|tag: v${VERSION}|g" ${CHART_DIR}/values.yaml
 
-      - name: Package Helm Chart
-        run: |
-          CHART_DIR="dist/chart"
-          # Create a temporary directory to store the packaged files
-          mkdir -p .cr-release-packages
-          helm package ${CHART_DIR} -d .cr-release-packages
-
       # ==========================================
       # 配置 Git 机器人身份（解决 Author identity unknown 报错）
       # ==========================================
