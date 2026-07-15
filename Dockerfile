@@ -23,4 +23,4 @@ COPY --from=builder --chown=appuser:appgroup /go/src/github.com/tenaghirmb/cron-
 
 USER 10001
 
-CMD ["./manager"]
+CMD ["/app/manager"]
