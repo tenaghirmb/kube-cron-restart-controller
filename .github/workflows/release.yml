@@ -59,7 +59,7 @@ jobs:
       - name: Set up Helm
         uses: azure/setup-helm@v4
         with:
-          version: ${{ steps.get_version.outputs.VERSION }}
+          version: 'v4.2.3'
 
       - name: Update Helm Chart Metadata and Image Tag
         run: |
