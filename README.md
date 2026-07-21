@@ -10,29 +10,31 @@
 
 # Table of Contents
 <!--ts-->
-   * [Features](#features)
-   * [Architecture Overview](#architecture-overview)
-      * [Why Not Native CronJobs?](#why-not-native-cronjobs)
-      * [Operator Sequence Diagram](#operator-sequence-diagram)
-   * [Tech Stack](#tech-stack)
-   * [Prerequisites](#prerequisites)
-   * [Installation](#installation)
-      * [Using Helm](#using-helm)
-      * [Using Kustomize](#using-kustomize)
-   * [Usage](#usage)
-   * [Configuration](#configuration)
-      * [timezone](#timezone)
-      * [restartTargetRef](#restarttargetref)
-      * [excludeDates](#excludedates)
-      * [schedule](#schedule)
-      * [misfirePolicy](#misfirepolicy)
-      * [misfireDeadWindowMinutes](#misfiredeadwindowminutes)
-      * [cron expression](#cron-expression)
-         * [Special Characters](#special-characters)
-         * [Predefined Schedules](#predefined-schedules)
-         * [Intervals](#intervals)
-   * [Contributing](#contributing)
-   * [Licensing](#licensing)
+- [Table of Contents](#table-of-contents)
+  - [Features](#features)
+  - [Architecture Overview](#architecture-overview)
+    - [Why Not Native CronJobs?](#why-not-native-cronjobs)
+    - [Operator Sequence Diagram](#operator-sequence-diagram)
+  - [Tech Stack](#tech-stack)
+  - [Prerequisites](#prerequisites)
+  - [End-to-End Tests](#end-to-end-tests)
+  - [Installation](#installation)
+    - [Using Helm](#using-helm)
+    - [Using Kustomize](#using-kustomize)
+  - [Usage](#usage)
+  - [Configuration](#configuration)
+    - [timezone](#timezone)
+    - [restartTargetRef](#restarttargetref)
+    - [excludeDates](#excludedates)
+    - [schedule](#schedule)
+    - [misfirePolicy](#misfirepolicy)
+    - [misfireDeadWindowMinutes](#misfiredeadwindowminutes)
+    - [cron expression](#cron-expression)
+      - [Special Characters](#special-characters)
+      - [Predefined Schedules](#predefined-schedules)
+      - [Intervals](#intervals)
+  - [Contributing](#contributing)
+  - [Licensing](#licensing)
 <!--te-->
 
 ## Features
@@ -124,6 +126,31 @@ A dual-layer orchestration engine combining a High-Performance in-Memory Registr
 | Docker | 23.0+ | Building container images (if deploying from source) |
 | Go | v1.24.0+ | Building from source |
 | Helm | v3.x+ | Installing via Helm chart |
+
+## End-to-End Tests
+
+The repository provides a dedicated end-to-end test suite under `test/e2e/` and a Makefile target:
+
+```bash
+make test-e2e
+```
+
+These tests run the controller manager in-process against a real Kubernetes API server. Before running them:
+
+- Ensure your `KUBECONFIG` points to a dedicated cluster (Kind is recommended).
+- Install the CRDs with:
+
+```bash
+kubectl apply -k config/crd
+```
+
+If you use Kind, a quick example is:
+
+```bash
+kind create cluster --name cron-restart-e2e
+kubectl apply -k config/crd
+make test-e2e
+```
 
 ## Installation
 
